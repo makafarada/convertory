@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "convertory-preview",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["preview-server.mjs"],
+      "port": 4755
+    },
+    {
+      "name": "website-static",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "5500", "--directory", "website"],
+      "port": 5500
+    }
+  ]
+}

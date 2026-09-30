@@ -1,0 +1,32 @@
+{
+  "appId": "com.convertory.ios",
+  "appName": "Convertory",
+  "webDir": "ios-web",
+  "backgroundColor": "#0b1020",
+  "server": {
+    "url": "https://convertory-app.pages.dev",
+    "androidScheme": "https",
+    "iosScheme": "https"
+  },
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#0b1020",
+    "preferredContentMode": "mobile",
+    "limitsNavigationsToAppBoundDomains": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "launchAutoHide": true,
+      "backgroundColor": "#0b1020",
+      "showSpinner": false,
+      "iosSpinnerStyle": "small",
+      "splashFullScreen": true,
+      "splashImmersive": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "overlaysWebView": true
+    }
+  }
+}

@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Convertory — Any file. Any format. Effortlessly.</title>
+<meta name="description" content="Convertory converts PDF, Word, Excel, PowerPoint and images on your own device — no uploads, no cloud processing. Fast, private, all-in-one file conversion.">
+<meta property="og:title" content="Convertory — Any file. Any format. Effortlessly.">
+<meta property="og:description" content="Convert PDF, Word, Excel, PowerPoint and images on-device. 100% private, no uploads.">
+<meta property="og:image" content="./assets/convertflow-icon-512.png">
+<meta property="og:type" content="website">
+<link rel="icon" href="./assets/convertflow-icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap">
+<link rel="stylesheet" href="./styles.css">
+<script defer src="./flow-bg.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha512-q+4liFwdPC/bNdhUpZx6aXDx/h77yEQtn4I1slHydcbZK34nLaR3cAeYSJshoxIOq3mjEf7xJE8YWIUHMn+oCQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.12.3/mammoth.browser.min.js" integrity="sha512-qTj3l2ESCbkowLBjKi71BxzAnyTRiVjSRpmOuCrwFu07hPPKmBLm4d3N0hYxTNep5bP1sqTbt0FhNVWlJZ1vBA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script defer src="./docx-writer.js"></script>
+<script defer src="./free-tool.js"></script>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top">
+      <img src="./assets/convertflow-icon-192.png" alt="">
+      <span>Convert<span class="flow">ory</span></span>
+    </a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#platforms">Platforms</a>
+      <a href="#pricing">Pricing</a>
+    </div>
+    <a class="nav-cta" href="#platforms">Get Convertory</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <canvas id="flow-canvas" class="hero-flow-canvas" aria-hidden="true"></canvas>
+  <div class="wrap hero-grid">
+    <div class="hero-text">
+      <span class="eyebrow">🛡 100% private · on-device conversion</span>
+      <h1>Any file. Any format.<br><span class="flow">Effortlessly.</span></h1>
+      <p class="lede">Convertory turns PDF, Word, Excel, PowerPoint and images into the format you need — instantly, and entirely on your own device. Nothing you convert ever leaves your computer.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="#platforms">Get Convertory</a>
+        <a class="btn btn-ghost" href="#features">See what it can do</a>
+      </div>
+      <div class="trust-row">
+        <div class="trust-item"><span class="dot">●</span> No upload required</div>
+        <div class="trust-item"><span class="dot">●</span> Works offline</div>
+        <div class="trust-item"><span class="dot">●</span> No account needed</div>
+      </div>
+    </div>
+    <div class="hero-features" id="features">
+      <div class="tools-usage-bar" id="ft-usage-bar">
+        <span id="ft-usage">Free conversions left today: 3 / 3</span>
+      </div>
+      <div class="grid hero-features-cards" id="tools-grid">
+        <span class="tools-group-label">PDF to…</span>
+        <div class="card" data-tool="pdf2word" data-accept=".pdf"><div class="icon icon-pdf">PDF<span class="icon-badge badge-w">W</span></div><h3>PDF to Word</h3><p>Editable DOCX with layout, tables and images reconstructed.</p></div>
+        <div class="card" data-tool="pro" data-pro-name="PDF to Excel"><div class="icon icon-pdf">PDF<span class="icon-badge badge-x">X</span></div><h3>PDF to Excel</h3><p>Detects real tables and extracts them as spreadsheet rows.</p><span class="badge-pro">PRO</span></div>
+        <div class="card" data-tool="pdf2text" data-accept=".pdf"><div class="icon icon-pdf">PDF<span class="icon-badge badge-t">T</span></div><h3>PDF to Text</h3><p>Plain text with columns preserved for pasting into a spreadsheet.</p></div>
+        <div class="card" data-tool="pro" data-pro-name="PDF to PowerPoint"><div class="icon icon-pdf">PDF<span class="icon-badge badge-p">P</span></div><h3>PDF to PowerPoint</h3><p>Each page becomes a high-resolution slide.</p><span class="badge-pro">PRO</span></div>
+        <span class="tools-group-label">Image to…</span>
+        <div class="card" data-tool="pro" data-pro-name="Image to PDF"><div class="icon icon-img">IMG<span class="icon-badge badge-pdf icon-badge-wide">PDF</span></div><h3>Image to PDF</h3><p>Scan or photo, converted into a clean, shareable PDF.</p><span class="badge-pro">PRO</span></div>
+        <div class="card" data-tool="pro" data-pro-name="Image to Excel"><div class="icon icon-img">IMG<span class="icon-badge badge-x">X</span></div><h3>Image to Excel</h3><p>OCR extracts tables from photos straight into a spreadsheet.</p><span class="badge-pro">PRO</span></div>
+        <div class="card" data-tool="pro" data-pro-name="Image to Text"><div class="icon icon-img">IMG<span class="icon-badge badge-t">T</span></div><h3>Image to Text</h3><p>Turn scans and photos into searchable, editable text.</p><span class="badge-pro">PRO</span></div>
+        <span class="tools-group-label">…to PDF</span>
+        <div class="card" data-tool="doc2pdf" data-accept=".docx"><div class="icon icon-doc">DOC<span class="icon-badge badge-pdf icon-badge-wide">PDF</span></div><h3>Word to PDF</h3><p>Turn a DOCX file into a clean, shareable PDF.</p></div>
+        <div class="card" data-tool="pro" data-pro-name="Excel to PDF"><div class="icon icon-xls">XLS<span class="icon-badge badge-pdf icon-badge-wide">PDF</span></div><h3>Excel to PDF</h3><p>Spreadsheets exported as clean, print-ready PDF pages.</p><span class="badge-pro">PRO</span></div>
+        <div class="card" data-tool="pro" data-pro-name="PowerPoint to PDF"><div class="icon icon-ppt">PPT<span class="icon-badge badge-pdf icon-badge-wide">PDF</span></div><h3>PowerPoint to PDF</h3><p>Slides exported as high-quality, shareable PDF pages.</p><span class="badge-pro">PRO</span></div>
+        <span class="tools-group-label">PDF tools</span>
+        <div class="card" data-tool="pro" data-pro-name="Merge PDF"><div class="icon icon-pdf">PDF<span class="icon-badge badge-merge">＋</span></div><h3>Merge PDF</h3><p>Combine multiple PDFs into a single document.</p><span class="badge-pro">PRO</span></div>
+        <div class="card" data-tool="pro" data-pro-name="Compress PDF"><div class="icon icon-pdf">PDF<span class="icon-badge badge-compress">↓</span></div><h3>Compress PDF</h3><p>Shrink file size without losing quality.</p><span class="badge-pro">PRO</span></div>
+        <div class="card" data-tool="pro" data-pro-name="Watermark PDF"><div class="icon icon-pdf">PDF<span class="icon-badge badge-watermark">▣</span></div><h3>Watermark PDF</h3><p>Stamp text watermarks across every page in seconds.</p><span class="badge-pro">PRO</span></div>
+        <div class="card" data-tool="pro" data-pro-name="More Formats"><div class="icon icon-more">•••</div><h3>More Formats</h3><p>Dozens more tools unlock with Convertory Pro.</p><span class="badge-pro">PRO</span></div>
+      </div>
+      <input type="file" id="ft-file" hidden>
+      <div class="tools-toast" id="ft-status"></div>
+    </div>
+  </div>
+</header>
+
+<section id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">How it works</span>
+      <h2>Three steps, zero uploads</h2>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="num">1</div><h3>Choose a file</h3><p>Drop in a PDF, Word, Excel, PowerPoint or image file.</p></div>
+      <div class="step"><div class="num">2</div><h3>Pick a format</h3><p>Select from fourteen conversion tools built into the app.</p></div>
+      <div class="step"><div class="num">3</div><h3>Convert on-device</h3><p>Processing happens locally — your file is never sent anywhere.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="platforms">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Platforms</span>
+      <h2>Get Convertory</h2>
+      <p>Convertory is rolling out across platforms. Availability below reflects where things stand today.</p>
+    </div>
+    <div class="platforms">
+      <div class="platform-card">
+        <img class="platform-app-icon" src="./assets/convertflow-icon-192.png" alt="Convertory">
+        <h3>Microsoft Store</h3>
+        <p style="color:var(--muted);font-size:.85rem;margin:0">Windows 10 &amp; 11</p>
+        <img class="store-badge" src="./assets/badge-msstore.svg" alt="Get it from Microsoft Store">
+        <span class="status status-soon">Coming soon</span>
+      </div>
+      <div class="platform-card">
+        <img class="platform-app-icon" src="./assets/convertflow-icon-192.png" alt="Convertory">
+        <h3>App Store</h3>
+        <p style="color:var(--muted);font-size:.85rem;margin:0">iPhone &amp; iPad</p>
+        <img class="store-badge" src="./assets/badge-appstore.svg" alt="Download on the App Store">
+        <span class="status status-soon">Coming soon</span>
+      </div>
+      <div class="platform-card">
+        <img class="platform-app-icon" src="./assets/convertflow-icon-192.png" alt="Convertory">
+        <h3>Google Play</h3>
+        <p style="color:var(--muted);font-size:.85rem;margin:0">Android</p>
+        <img class="store-badge" src="./assets/badge-googleplay.svg" alt="Get it on Google Play">
+        <span class="status status-soon">Coming soon</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Pricing</span>
+      <h2>Free to start, Convertory Pro when you need more</h2>
+    </div>
+    <div class="pricing">
+      <div class="price-card">
+        <h3>Convertory Lite</h3>
+        <div class="price-tag">$0</div>
+        <ul>
+          <li><span class="dot">✓</span> PDF to Word</li>
+          <li><span class="dot">✓</span> PDF to Text</li>
+          <li><span class="dot">✓</span> Excel to PDF</li>
+          <li><span class="dot">✓</span> Limited daily conversions</li>
+        </ul>
+        <a class="btn btn-ghost" href="#platforms" style="width:100%;justify-content:center">Get started</a>
+      </div>
+      <div class="price-card pro">
+        <h3>Convertory Pro</h3>
+        <div class="price-tag">TBD <span>/ month</span></div>
+        <ul>
+          <li><span class="dot">✓</span> All 14 conversion tools</li>
+          <li><span class="dot">✓</span> Unlimited conversions</li>
+          <li><span class="dot">✓</span> OCR for scans &amp; images</li>
+          <li><span class="dot">✓</span> Batch conversion</li>
+        </ul>
+        <a class="btn btn-primary" href="#platforms" style="width:100%;justify-content:center">Upgrade to Convertory Pro</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-band">
+  <div class="wrap">
+    <h2>Stop uploading your files to convert them.</h2>
+    <p>Convertory does it on your own device — private by design.</p>
+    <a class="btn btn-primary" href="#platforms">Get Convertory</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="#top">
+          <img src="./assets/convertflow-icon-192.png" alt="">
+          <span>Convert<span class="flow">ory</span></span>
+        </a>
+        <p>Any file. Any format. Effortlessly. Fast, private, on-device document conversion.</p>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <ul>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="#platforms">Download</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="privacy.html">Privacy Policy</a></li>
+          <li><a href="terms.html">Terms of Service</a></li>
+          <li><a href="mailto:support@convertory.net">Contact support</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Convertory. All rights reserved.</span>
+      <span>Made for people who'd rather not upload their files.</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

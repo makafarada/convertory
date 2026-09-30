@@ -1,0 +1,27 @@
+{
+  "name": "Convertory",
+  "short_name": "Convertory",
+  "description": "Fast, accurate, and private document converter for PDF, Word, Excel, and images.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b1020",
+  "theme_color": "#0ea5e9",
+  "categories": ["productivity", "utilities", "business"],
+  "lang": "en",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "./assets/convertflow-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./assets/convertflow-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Convertory - Start Here</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0b1020;
+        --panel: #11182b;
+        --line: #26324a;
+        --text: #f8fafc;
+        --muted: #94a3b8;
+        --brand: #22d3ee;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Segoe UI", system-ui, sans-serif;
+      }
+      main {
+        width: min(920px, 100%);
+        padding: 28px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--panel);
+      }
+      h1 { margin: 0 0 8px; font-size: clamp(30px, 6vw, 54px); line-height: 1; }
+      p { color: var(--muted); line-height: 1.55; }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 12px;
+        margin-top: 22px;
+      }
+      a {
+        display: block;
+        min-height: 120px;
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        color: var(--text);
+        text-decoration: none;
+        background: #172033;
+      }
+      a:hover { border-color: var(--brand); }
+      strong { display: block; margin-bottom: 8px; font-size: 18px; }
+      small { color: var(--muted); line-height: 1.45; }
+      code { color: var(--brand); }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Convertory</h1>
+      <p>Bu dosya paketin açılış noktasıdır. Windows Store/PWA önizlemesi tarayıcıda hemen açılır. iOS projesi macOS/Xcode üzerinde açılmak üzere proje dosyasıyla birlikte hazırlandı.</p>
+      <div class="grid">
+        <a href="./ms-store/index.html">
+          <strong>Windows / MS Store Preview</strong>
+          <small>Tarayıcıda çalışan Store uyumlu PWA arayüzünü açar.</small>
+        </a>
+        <a href="./RELEASE_PACKAGE.md">
+          <strong>Release Notları</strong>
+          <small>Android, iOS ve Microsoft Store durumunu gösterir.</small>
+        </a>
+        <a href="./ios/ConvertFlow/README.md">
+          <strong>iOS Kurulum</strong>
+          <small>Xcode ile açma ve archive alma adımları.</small>
+        </a>
+      </div>
+      <p>Windows'ta tek tık için ayrıca <code>open-ms-store-preview.cmd</code> dosyasını çalıştırabilirsin.</p>
+    </main>
+  </body>
+</html>

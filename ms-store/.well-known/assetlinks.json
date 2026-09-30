@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.aistudio.convertflow.xrtqpa",
+    "sha256_cert_fingerprints": ["39:CA:A7:05:D4:BD:3A:E3:2E:62:A8:98:D7:3C:5F:8B:6A:35:33:E7:DE:80:1A:5F:A5:53:D6:AC:73:71:18:38"]
+  }
+}]

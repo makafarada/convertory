@@ -1,0 +1,11 @@
+<svg viewBox="0 0 180 54" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Get it from Microsoft Store">
+  <rect width="180" height="54" rx="8" fill="#000"/>
+  <g transform="translate(15,16)">
+    <rect x="0" y="0" width="11" height="11" fill="#f35325"/>
+    <rect x="13" y="0" width="11" height="11" fill="#81bc06"/>
+    <rect x="0" y="13" width="11" height="11" fill="#05a6f0"/>
+    <rect x="13" y="13" width="11" height="11" fill="#ffba08"/>
+  </g>
+  <text x="47" y="23" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="7.4">Get it from</text>
+  <text x="47" y="39" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="600">Microsoft Store</text>
+</svg>

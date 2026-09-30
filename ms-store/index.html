@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#061733">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap">
+    <link rel="stylesheet" href="./styles.css">
+    <title>Convertory</title>
+  </head>
+  <body>
+    <main class="stage">
+      <section class="phone" aria-label="Convertory mobile preview">
+        <div class="screen">
+          <header class="status-bar">
+            <span>9:41</span>
+            <span class="status-icons">▮▮▮ ))) ▭</span>
+          </header>
+
+          <main class="content">
+            <section class="tab-panel active" id="panel-convert">
+              <header class="topbar">
+                <img class="brand-logo" src="./assets/convertflow-icon-192.png" alt="Convertory logo">
+                <div class="brand-copy">
+                  <h1>Convert<span>ory</span></h1>
+                  <p>Any file. Any format. Effortlessly.</p>
+                </div>
+                <button class="pro-pill" id="proToggle">♛ PRO</button>
+                <button class="settings-button" data-tab="settings" aria-label="Settings">⚙</button>
+              </header>
+
+              <section class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Choose a file to convert">
+                <div class="drop-inner">
+                  <div class="cloud-icon" aria-hidden="true">
+                    <svg viewBox="0 0 80 60">
+                      <path d="M24 47H18a14 14 0 0 1 0-28h2A22 22 0 0 1 62 28a10 10 0 0 1 0 19h-8"/>
+                      <path d="M40 48V25m0 0-11 11m11-11 11 11"/>
+                    </svg>
+                  </div>
+                  <h2 id="selectedName">Drop your file here</h2>
+                  <p>or tap to choose</p>
+                  <div class="file-actions">
+                    <button class="choose-file" id="selectButton"><span class="doc-mini">▤</span>Choose File</button>
+                    <button class="convert-now hidden" id="convertNowButton"><span class="doc-mini">⚡</span>Convert Now</button>
+                  </div>
+                  <input class="file-input" id="fileInput" type="file" multiple accept="application/pdf,image/jpeg,image/png,image/webp,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain,application/rtf,.pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.csv,.ppt,.pptx,.txt,.rtf" />
+                  <small>Supports PDF, JPG, PNG, WEBP, DOCX, XLSX, PPTX, TXT and more</small>
+                  <button class="sample-link" id="sampleLinkButton" type="button">or try a sample file</button>
+                </div>
+              </section>
+
+              <section class="convert-head">
+                <h2>Convert to</h2>
+                <span>⚡ Fast • Private • High Quality</span>
+              </section>
+
+              <section class="format-grid" id="tools"></section>
+              <section id="conversionOptions" class="result-card hidden">
+                <label id="watermarkOption" class="hidden">Watermark text <input id="watermarkText" value="CONFIDENTIAL" maxlength="120" /></label>
+                <label id="formatOption" class="hidden">Export PDF as <select id="extraFormat"><option value="png">PNG images (ZIP)</option><option value="txt">Plain text (TXT)</option></select></label>
+                <p id="conversionHint"></p>
+              </section>
+
+              <section class="result-card hidden" id="result"></section>
+
+              <section class="trust-bar">
+                <article>
+                  <strong>🛡 100% Private</strong>
+                  <span>Your files stay on your device</span>
+                </article>
+                <article>
+                  <strong>⚡ No Upload Required</strong>
+                  <span>Everything works on-device</span>
+                </article>
+                <article>
+                  <strong>∞ All-in-One</strong>
+                  <span>All tools in one app</span>
+                </article>
+              </section>
+            </section>
+
+            <section class="tab-panel" id="panel-files">
+              <header class="section-top">
+                <h2>My Files</h2>
+                <p>Recent conversions and queued exports.</p>
+              </header>
+              <button class="choose-file wide" id="addBatchButton">Add Selected File</button>
+              <button class="secondary-action" id="runBatchButton">Run Batch Queue</button>
+              <div class="stack-list" id="batchList"></div>
+              <div class="stack-list" id="historyList"></div>
+            </section>
+
+            <section class="tab-panel" id="panel-settings">
+              <header class="section-top">
+                <h2>Settings</h2>
+                <p>Privacy, cache, and account controls.</p>
+              </header>
+              <section class="settings-card">
+                <div class="privacy-row"><span>Cloud upload</span><strong>Off</strong></div>
+                <div class="privacy-row"><span>Temporary cache</span><strong>0.8 MB</strong></div>
+                <div class="privacy-row"><span>Document retention</span><strong>Session only</strong></div>
+                <button class="secondary-action" id="purgeButton">Purge Cache</button>
+              </section>
+            </section>
+          </main>
+
+          <nav class="bottom-nav" aria-label="Bottom navigation">
+            <button class="active" data-tab="convert"><span>⌂</span>Convert</button>
+            <button data-tab="files"><span>▱</span>My Files</button>
+            <button data-tab="settings"><span>⚙</span>Settings</button>
+          </nav>
+
+          <section class="modal hidden" id="fileModal" aria-label="Select document modal">
+            <div class="modal-card">
+              <div class="modal-head">
+                <div>
+                  <strong>Select Document</strong>
+                  <small>Demo files for preview only.</small>
+                </div>
+                <button id="closeModalButton">×</button>
+              </div>
+              <div class="modal-list" id="modalFiles"></div>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+  <script src="./app.js?v=20260914-r7"></script>
+  </body>
+</html>
+
+
+
