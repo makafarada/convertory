@@ -635,8 +635,34 @@ function buildDocxContent(lines) {
     { name: "word/_rels/document.xml.rels", content: documentRelsXml }
   ]);
 }
+async function convertPdfToDocxViaTextApi(file, output) {
+  const data = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(",")[1]);
+    reader.onerror = () => reject(new Error("Could not read the selected file."));
+    reader.readAsDataURL(file);
+  });
+  const response = await fetch("/api/convert", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tool: "PDF to Text", files: [{ name: file.name, data }], options: {} }),
+    signal: AbortSignal.timeout(120000)
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result.error || "This PDF could not be converted to editable DOCX.");
+  if (!result.downloadUrl) throw new Error("The converter returned no output.");
+  const text = await (await fetch(result.downloadUrl)).text();
+  const lines = text.replace(/\r\n/g, "\n").split("\n").map((line) => line.replace(/\t/g, "    "));
+  const blob = new Blob([buildDocxContent(lines)], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+  state.lastSavedFile = output;
+  state.lastPreviewText = text;
+  state.lastConversionNote = "Text-only Word export: layout, images and tables are not preserved on this version.";
+  return URL.createObjectURL(blob);
+}
+
 async function createConvertedFile(output, toolName, source) {
   state.lastConversionNote = '';
+  state.lastPreviewText = '';
   if (toolName === "PDF to Word") {
     const file = source?.file ?? state.selectedFile;
     if (!file) throw new Error("Choose a PDF file before converting.");
@@ -653,7 +679,10 @@ async function createConvertedFile(output, toolName, source) {
     });
     if (!response.ok) {
       const payload = await response.json().catch(() => ({}));
-      throw new Error(payload.error || "This PDF could not be converted to editable DOCX.");
+      // A real engine error carries a message; a bare/non-JSON failure means this
+      // deployment has no local DOCX engine, so use the hosted text-only path.
+      if (!payload.error) return await convertPdfToDocxViaTextApi(file, output);
+      throw new Error(payload.error);
     }
     const payload = await response.json().catch(() => ({}));
     if (!payload.downloadUrl) throw new Error("The local DOCX engine did not return a download link.");
@@ -687,12 +716,18 @@ async function createConvertedFile(output, toolName, source) {
   if(!result.downloadUrl) throw new Error('The converter returned no output.');
   state.lastSavedFile=result.savedFile;
   state.lastConversionNote=result.note || '';
+  if (result.downloadUrl.startsWith('data:')) {
+    // Chrome/TWA handle blob: downloads far more reliably than data: URLs.
+    const blob = await (await fetch(result.downloadUrl)).blob();
+    return URL.createObjectURL(blob);
+  }
   return new URL(result.downloadUrl,location.origin).toString();
 }
 
 async function downloadConvertedFile(output, toolName, source) {
   const url = await createConvertedFile(output, toolName, source);
   state.lastDownloadUrl = url;
+  state.lastOutputName = output;
   return url;
 }
 
@@ -703,6 +738,12 @@ async function openSavedFile(fileName) {
     body: JSON.stringify({ savedFile: fileName }),
     signal: AbortSignal.timeout(10000)
   });
+  if (response.status === 404 || response.status === 405) {
+    // Hosted/mobile deployment has no desktop "open" endpoint: hand the file to the browser instead.
+    if (!state.lastDownloadUrl) throw new Error("Could not open the file.");
+    triggerDownload(state.lastDownloadUrl, state.lastOutputName || fileName);
+    return;
+  }
   const result = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(result.error || "Could not open the file.");
 }
@@ -728,6 +769,11 @@ async function buildPreviewMarkup(downloadUrl, output) {
       const truncated = text.length > 4000;
       return `<div class="preview-box preview-text"><pre>${escapeHtml(truncated ? text.slice(0, 4000) : text)}${truncated ? "\n…" : ""}</pre></div>`;
     }
+    if (extension === ".docx" && state.lastPreviewText) {
+      const text = state.lastPreviewText;
+      const truncated = text.length > 4000;
+      return `<div class="preview-box preview-text"><pre>${escapeHtml(truncated ? text.slice(0, 4000) : text)}${truncated ? "\n…" : ""}</pre></div>`;
+    }
     if (extension === ".pdf") {
       const response = await fetch(downloadUrl, { signal: AbortSignal.timeout(15000) });
       if (!response.ok) throw new Error("Could not load the preview.");
@@ -749,6 +795,27 @@ async function buildPreviewMarkup(downloadUrl, output) {
     return `<div class="preview-box preview-unavailable">Preview couldn't be generated (${escapeHtml(error.message || "unknown error")}). Use Download to view the file.</div>`;
   }
   return `<div class="preview-box preview-unavailable">Preview isn't available for this file type. Use Download to view it.</div>`;
+}
+
+const isInlineResult = (url) => /^(blob|data):/.test(url || "");
+
+// A web page cannot launch a downloaded file, so the converted text is shown in a full-screen reader instead.
+function openViewer(name, url, text) {
+  document.querySelector("#fileViewer")?.remove();
+  const viewer = document.createElement("div");
+  viewer.id = "fileViewer";
+  viewer.innerHTML = `<div class="file-viewer-bar"><strong></strong><button type="button" class="file-viewer-close">Close</button></div><pre></pre><div class="file-viewer-actions"><button type="button" class="preview-download-button file-viewer-download">Download</button><button type="button" class="file-viewer-share">Share</button></div>`;
+  viewer.querySelector("strong").textContent = name;
+  viewer.querySelector("pre").textContent = text;
+  viewer.querySelector(".file-viewer-close").addEventListener("click", () => viewer.remove());
+  viewer.querySelector(".file-viewer-download").addEventListener("click", () => triggerDownload(url, name));
+  viewer.querySelector(".file-viewer-share").addEventListener("click", async () => {
+    try {
+      if (navigator.share) await navigator.share({ title: name, text });
+      else await navigator.clipboard.writeText(text);
+    } catch (error) { /* cancelled */ }
+  });
+  document.body.appendChild(viewer);
 }
 
 async function runConversion() {
@@ -779,26 +846,24 @@ async function runConversion() {
     const downloadUrl = await downloadConvertedFile(output, selectedTool, selected);
     state.history.unshift({ output, tool: selectedTool, source: selected.name, time: "Just now", url: downloadUrl });
     renderHistory();
+    const inline = isInlineResult(downloadUrl);
+    const viewText = inline && /\.(docx|txt)$/i.test(output) ? state.lastPreviewText : "";
+    const previewMarkup = downloadUrl && !viewText ? await buildPreviewMarkup(downloadUrl, output) : "";
     $("#result").innerHTML = `
       <strong>✓ ${escapeHtml(output)}</strong>
-      <span>Saved to Downloads\\Convertory\\${escapeHtml(state.lastSavedFile || output)} • ${escapeHtml(selectedTool)}</span>
-      <span>${escapeHtml(state.lastConversionNote || '')}</span>
-      <span>Loading preview…</span>
-    `;
-    const previewMarkup = downloadUrl ? await buildPreviewMarkup(downloadUrl, output) : "";
-    $("#result").innerHTML = `
-      <strong>✓ ${escapeHtml(output)}</strong>
-      <span>Saved to Downloads\\Convertory\\${escapeHtml(state.lastSavedFile || output)} • ${escapeHtml(selectedTool)}</span>
+      <span>${inline ? "" : `Saved to Downloads\Convertory\${escapeHtml(state.lastSavedFile || output)} • `}${escapeHtml(selectedTool)}</span>
       <span>${escapeHtml(state.lastConversionNote || '')}</span>
       ${previewMarkup}
       ${downloadUrl ? `
         <div class="result-actions">
+          ${viewText ? `<button type="button" class="view-file-button" data-url="${downloadUrl}" data-name="${escapeHtml(output)}">Open</button>` : ""}
           <button type="button" class="preview-download-button" data-url="${downloadUrl}" data-name="${escapeHtml(output)}">Download</button>
-          <a class="download-again" href="${downloadUrl}" download="${escapeHtml(output)}">Save file</a>
-          <button type="button" class="open-file-button" data-file="${escapeHtml(state.lastSavedFile || output)}">Open File</button>
+          ${inline ? "" : `<a class="download-again" href="${downloadUrl}" download="${escapeHtml(output)}">Save file</a>
+          <button type="button" class="open-file-button" data-file="${escapeHtml(state.lastSavedFile || output)}">Open File</button>`}
         </div>
       ` : ""}
     `;
+    if (viewText) openViewer(output, downloadUrl, viewText);
   } catch (error) {
     const message = error.name === "TimeoutError" ? "Conversion timed out. Please retry with a smaller PDF." : error.message || "Could not read this file locally.";
     $("#result").innerHTML = `<strong>Conversion failed</strong><span>${escapeHtml(message)}</span>`;
@@ -916,6 +981,11 @@ document.addEventListener("click", async (event) => {
   const downloadButton = event.target.closest(".preview-download-button");
   if (downloadButton) {
     triggerDownload(downloadButton.dataset.url, downloadButton.dataset.name);
+    return;
+  }
+  const viewButton = event.target.closest(".view-file-button");
+  if (viewButton) {
+    openViewer(viewButton.dataset.name, viewButton.dataset.url, state.lastPreviewText);
     return;
   }
   const openButton = event.target.closest(".open-file-button");
