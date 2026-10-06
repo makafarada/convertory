@@ -50,9 +50,11 @@ async function applyCapabilities() {
     const response = await fetch("/api/capabilities", { cache: "no-store" });
     if (!response.ok || !(response.headers.get("content-type") || "").includes("json")) return;
     const caps = await response.json();
-    if (caps.tools !== "all") return;
-    tools.splice(0, tools.length, ...allTools);
-    samples.splice(0, samples.length, ...allSamples);
+    const names = caps.tools === "all" ? null : new Set(Array.isArray(caps.tools) ? caps.tools : []);
+    if (names && !names.size) return;
+    const visible = (name) => !names || names.has(name);
+    tools.splice(0, tools.length, ...allTools.filter((tool) => visible(tool.name)));
+    samples.splice(0, samples.length, ...allSamples.filter((sample) => !sample.tool || visible(sample.tool)));
     renderTools();
     renderModalFiles();
   } catch (error) {

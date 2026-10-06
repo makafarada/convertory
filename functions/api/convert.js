@@ -67,11 +67,45 @@ function json(status, payload) {
   });
 }
 
-export async function onRequestPost({ request }) {
+import { ENGINE_TOOLS } from "../_lib/engineTools.js";
+
+async function forwardToEngine(job, env) {
+  let response;
+  try {
+    response = await fetch(`${String(env.ENGINE_URL).replace(/\/+$/, "")}/convert`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-engine-token": env.ENGINE_TOKEN },
+      body: JSON.stringify({ tool: job.tool, files: job.files, options: job.options || {} }),
+      signal: AbortSignal.timeout(170000)
+    });
+  } catch {
+    return json(503, { error: "The converter is starting up or unavailable. Please try again in a minute." });
+  }
+  let payload;
+  try { payload = await response.json(); } catch { payload = {}; }
+  if (!response.ok || !payload.dataBase64) {
+    return json(response.status === 503 ? 503 : 422, { error: payload.error || "Conversion failed. Check that the input file opens normally." });
+  }
+  const ext = extOf(payload.outputName);
+  const types = { ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation", ".zip": "application/zip", ".pdf": "application/pdf", ".txt": "text/plain;charset=utf-8" };
+  return json(200, {
+    downloadUrl: `data:${types[ext] || "application/octet-stream"};base64,${payload.dataBase64}`,
+    savedFile: payload.outputName, outputName: payload.outputName, note: payload.note || ""
+  });
+}
+
+export async function onRequestPost({ request, env }) {
   try {
     const job = await request.json();
     const tool = job?.tool;
     if (!tool) return json(422, { error: "Choose a supported conversion." });
+
+    if (!SUPPORTED_TOOLS.has(tool) && env?.ENGINE_URL && env?.ENGINE_TOKEN && ENGINE_TOOLS.includes(tool)) {
+      if (!Array.isArray(job.files) || !job.files.length || job.files.length > 20) {
+        return json(422, { error: "Select between 1 and 20 files." });
+      }
+      return forwardToEngine(job, env);
+    }
 
     if (!SUPPORTED_TOOLS.has(tool)) {
       return json(422, {

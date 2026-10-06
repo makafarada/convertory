@@ -1,7 +1,12 @@
 """Real local conversion operations. No placeholder exports."""
+import csv
+import io
 import json
+import os
+import shutil
 import sys
 import subprocess
+import tempfile
 from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
 
@@ -19,6 +24,48 @@ def powershell(script, *args):
     result = subprocess.run([PS, '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', str(ROOT / script), *map(str,args)], capture_output=True, timeout=120)
     if result.returncode:
         raise ValueError(result.stderr.decode('utf-8', errors='replace')[-1800:])
+
+IS_WINDOWS = os.name == 'nt'
+
+def office_to_pdf(kind, source, output):
+    if IS_WINDOWS:
+        powershell('office-to-pdf.ps1','-Kind',kind,'-InputPath',source,'-OutputPath',output)
+        return
+    # Linux/container engine: LibreOffice headless with an isolated profile per job.
+    soffice = shutil.which('soffice') or shutil.which('libreoffice')
+    if not soffice: raise ValueError('The Office conversion engine is not installed.')
+    with tempfile.TemporaryDirectory() as work:
+        result = subprocess.run([soffice,f'-env:UserInstallation=file://{work}/profile','--headless','--norestore','--convert-to','pdf','--outdir',work,str(source)],capture_output=True,timeout=150)
+        produced = Path(work)/(Path(source).stem+'.pdf')
+        if result.returncode or not produced.exists():
+            raise ValueError('The document could not be converted. Check that it opens normally.')
+        shutil.copyfile(produced,output)
+
+def ocr_image(image_path):
+    """Returns {'text','lines':[{'words':[{'text','x','y','width','height'}]}]} like image-ocr.ps1."""
+    if IS_WINDOWS:
+        ocr_path = Path(image_path).with_suffix('.ocr.json')
+        powershell('image-ocr.ps1','-InputPath',image_path,'-OutputPath',ocr_path)
+        return json.loads(ocr_path.read_text(encoding='utf-8-sig'))
+    tesseract = shutil.which('tesseract')
+    if not tesseract: raise ValueError('The OCR engine is not installed.')
+    result = subprocess.run([tesseract,str(image_path),'stdout','-l','eng','--psm','6','tsv'],capture_output=True,timeout=120)
+    if result.returncode: raise ValueError('Text recognition failed for this image.')
+    reader = csv.DictReader(io.StringIO(result.stdout.decode('utf-8',errors='replace')),delimiter='\t',quoting=csv.QUOTE_NONE)
+    lines = {}
+    for row in reader:
+        text = (row.get('text') or '').strip()
+        if not text or float(row.get('conf') or -1) < 0: continue
+        key = (row['block_num'],row['par_num'],row['line_num'])
+        lines.setdefault(key,[]).append({'text':text,'x':float(row['left']),'y':float(row['top']),'width':float(row['width']),'height':float(row['height'])})
+    out = [{'words':words} for words in lines.values()]
+    return {'text':'\n'.join(' '.join(w['text'] for w in l['words']) for l in out),'lines':out}
+
+def watermark_font_file():
+    candidates = [r'C:\Windows\Fonts\arial.ttf','/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf','/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf']
+    for candidate in candidates:
+        if Path(candidate).exists(): return candidate
+    raise ValueError('No font available for the watermark.')
 
 def save_sheet(wb, output):
     for ws in wb:
@@ -71,7 +118,7 @@ def run(job):
     note = ''
     if tool in ('Word to PDF','Excel to PDF','PowerPoint to PDF'):
         kind = {'Word to PDF':'word','Excel to PDF':'excel','PowerPoint to PDF':'powerpoint'}[tool]
-        powershell('office-to-pdf.ps1','-Kind',kind,'-InputPath',source,'-OutputPath',output)
+        office_to_pdf(kind, source, output)
     elif tool == 'Image to PDF':
         with fitz.open() as doc:
             for path in paths:
@@ -85,14 +132,12 @@ def run(job):
                     page.insert_image(page.rect,stream=stream.getvalue())
             doc.save(output,deflate=True)
     elif tool in ('Image to Text','Image to Excel'):
-        ocr_path = output.with_suffix('.ocr.json')
         normalized = output.with_suffix('.ocr.png')
         with Image.open(source) as im:
             im = ImageOps.exif_transpose(im).convert('RGB')
             im.thumbnail((2500,2500))
             im.save(normalized)
-        powershell('image-ocr.ps1','-InputPath',normalized,'-OutputPath',ocr_path)
-        ocr = json.loads(ocr_path.read_text(encoding='utf-8-sig'))
+        ocr = ocr_image(normalized)
         if not ocr['text'].strip(): raise ValueError('No text was detected in the image. Try a sharper image.')
         # Windows OCR groups 'lines' by detected text block/column, not by row, so
         # widely-spaced columns (e.g. table cells) come back as separate lines in
@@ -164,7 +209,7 @@ def run(job):
             elif tool == 'Watermark PDF':
                 label=str(options.get('watermark','CONFIDENTIAL')).strip()[:120]
                 if not label: raise ValueError('Enter watermark text.')
-                font=fitz.Font(fontfile=r'C:\Windows\Fonts\arial.ttf')
+                font=fitz.Font(fontfile=watermark_font_file())
                 for page in doc:
                     size=min(36,(page.rect.width-48)/max(font.text_length(label,fontsize=1),1))
                     writer=fitz.TextWriter(page.rect)
