@@ -18,7 +18,7 @@ const samples = [
   { name: "Monthly Deck", detail: "Presentation pages", tag: "PPTX", icon: "powerpoint", output: "monthly-deck.pdf", tool: "PowerPoint to PDF" }
 ];
 
-const tools = [
+const allTools = [
   { name: "PDF to Word", detail: "Editable DOCX layout", from: "pdf", to: "word", output: "pdf-to-word.docx", free: true },
   { name: "PDF to Excel", detail: "Extract tables", from: "pdf", to: "excel", output: "tables.xlsx", free: false },
   { name: "PDF to Text", detail: "Extract plain text", from: "pdf", to: "text", output: "extracted.txt", free: true },
@@ -34,6 +34,31 @@ const tools = [
   { name: "Watermark PDF", detail: "Add text or image", from: "pdf", to: "lock", output: "watermarked.pdf", free: false },
   { name: "More Formats", detail: "PDF to PNG or TXT", from: "more", to: "more", output: "converted-file.zip", free: false }
 ];
+
+// Hosted deployments (web/PWA/Android/iOS) only run the tools the Cloudflare
+// Function + client-side fallbacks can actually do. The Windows build serves
+// this same file from a local server that reports `tools: "all"` at
+// /api/capabilities, which restores the full list (see applyCapabilities()).
+const HOSTED_TOOLS = new Set(["PDF to Word", "PDF to Text", "Merge PDF", "Watermark PDF", "Image to PDF"]);
+const tools = allTools.filter((tool) => HOSTED_TOOLS.has(tool.name));
+const allSamples = [...samples];
+samples.splice(0, samples.length, ...allSamples.filter((sample) => !sample.tool || HOSTED_TOOLS.has(sample.tool)));
+const toolAvailable = (name) => tools.some((tool) => tool.name === name);
+
+async function applyCapabilities() {
+  try {
+    const response = await fetch("/api/capabilities", { cache: "no-store" });
+    if (!response.ok || !(response.headers.get("content-type") || "").includes("json")) return;
+    const caps = await response.json();
+    if (caps.tools !== "all") return;
+    tools.splice(0, tools.length, ...allTools);
+    samples.splice(0, samples.length, ...allSamples);
+    renderTools();
+    renderModalFiles();
+  } catch (error) {
+    /* hosted default stays */
+  }
+}
 
 const $ = (selector) => document.querySelector(selector);
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
@@ -127,12 +152,13 @@ function formatBytes(bytes) {
 }
 
 function recommendedToolForExtension(extension) {
-  if (extension.includes("XLS")) return "Excel to PDF";
-  if (extension.includes("DOC")) return "Word to PDF";
-  if (extension.includes("PPT")) return "PowerPoint to PDF";
+  const pick = (name) => (toolAvailable(name) ? name : null);
+  if (extension.includes("XLS")) return pick("Excel to PDF") ?? "PDF to Word";
+  if (extension.includes("DOC")) return pick("Word to PDF") ?? "PDF to Word";
+  if (extension.includes("PPT")) return pick("PowerPoint to PDF") ?? "PDF to Word";
   if (["JPG", "JPEG", "PNG", "WEBP"].includes(extension)) return "Image to PDF";
   if (extension.includes("PDF")) return "PDF to Word";
-  return "More Formats";
+  return pick("More Formats") ?? "PDF to Word";
 }
 
 function selectRealFile(file, files = [file]) {
@@ -1135,6 +1161,7 @@ renderTools();
 renderModalFiles();
 renderBatch();
 renderHistory();
+applyCapabilities();
 updatePrivacyPanel();
 
 

@@ -265,6 +265,10 @@ async function convertOther(request,response) {
 
 createServer(async (request, response) => {
   const pathname = decodeURIComponent(new URL(request.url, `http://${request.headers.host}`).pathname);
+  if (request.method === "GET" && pathname === "/api/capabilities") {
+    sendJson(response, 200, { tools: "all", engine: "local" });
+    return;
+  }
   if (request.method==='POST' && pathname==='/api/convert') {
     await convertOther(request,response); return;
   }
