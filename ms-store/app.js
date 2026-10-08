@@ -44,6 +44,8 @@ const tools = allTools.filter((tool) => HOSTED_TOOLS.has(tool.name));
 const allSamples = [...samples];
 samples.splice(0, samples.length, ...allSamples.filter((sample) => !sample.tool || HOSTED_TOOLS.has(sample.tool)));
 const toolAvailable = (name) => tools.some((tool) => tool.name === name);
+// Hosted builds have no purchase flow, so they show no PRO UI and keep every tool open.
+let hostedMode = true;
 
 async function applyCapabilities() {
   try {
@@ -52,6 +54,10 @@ async function applyCapabilities() {
     const caps = await response.json();
     const names = caps.tools === "all" ? null : new Set(Array.isArray(caps.tools) ? caps.tools : []);
     if (names && !names.size) return;
+    if (!names) {
+      hostedMode = false;
+      $("#proToggle").classList.remove("hidden");
+    }
     const visible = (name) => !names || names.has(name);
     tools.splice(0, tools.length, ...allTools.filter((tool) => visible(tool.name)));
     samples.splice(0, samples.length, ...allSamples.filter((sample) => !sample.tool || visible(sample.tool)));
@@ -97,7 +103,7 @@ function formatFlowIcon(from, to) {
 }
 
 function isToolLocked(tool) {
-  return !state.pro && !tool.free;
+  return !hostedMode && !state.pro && !tool.free;
 }
 
 function renderTools() {
@@ -1159,6 +1165,7 @@ $("#purgeButton").addEventListener("click", () => {
   updatePrivacyPanel();
 });
 
+$("#proToggle").classList.add("hidden");
 renderTools();
 renderModalFiles();
 renderBatch();
