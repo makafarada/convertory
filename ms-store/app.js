@@ -69,7 +69,7 @@ async function startPurchase() {
   const button = $("#proToggle");
   button.disabled = true;
   try {
-    const license = await (await fetch("/api/license", { method: "POST" })).json();
+    const license = await (await fetch("/api/license", { method: "POST", headers: { "X-Convertory-Request": "1" } })).json();
     state.pro = Boolean(license.pro);
   } catch (error) {
     /* stay on the free tier */

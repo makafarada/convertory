@@ -288,6 +288,15 @@ createServer(async (request, response) => {
     return;
   }
   if (pathname === "/api/license" && (request.method === "GET" || request.method === "POST")) {
+    // Only the app's own page may query/trigger billing: blocks cross-site requests and DNS rebinding.
+    const hostOk = /^(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$/i.test(request.headers.host || "");
+    const origin = request.headers.origin;
+    const originOk = !origin || new URL(origin).host === request.headers.host;
+    const headerOk = request.method === "GET" || request.headers["x-convertory-request"] === "1";
+    if (!hostOk || !originOk || !headerOk) {
+      sendJson(response, 403, { ok: false, pro: false, error: "Forbidden" });
+      return;
+    }
     sendJson(response, 200, await runStoreLicense(request.method === "POST" ? "purchase" : "status"));
     return;
   }
@@ -359,6 +368,6 @@ createServer(async (request, response) => {
     "Cache-Control": "no-store, max-age=0"
   });
   createReadStream(target).pipe(response);
-}).listen(port, "0.0.0.0", () => {
+}).listen(port, storeBilling ? "127.0.0.1" : "0.0.0.0", () => {
   console.log(`Convertory preview: http://127.0.0.1:${port}/`);
 });
