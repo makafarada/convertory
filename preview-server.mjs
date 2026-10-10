@@ -263,10 +263,32 @@ async function convertOther(request,response) {
   }
 }
 
+// Real Convertory Pro billing only exists inside the Microsoft Store package
+// (package identity is inherited by this process); anywhere else it is a dev run.
+const storeBilling = /\\WindowsApps\\/i.test(process.execPath);
+const storeLicenseScript = join(projectRoot, "store-license.ps1");
+
+async function runStoreLicense(mode) {
+  if (!storeBilling || !existsSync(storeLicenseScript)) return { ok: false, pro: false, error: "Store billing unavailable" };
+  try {
+    const { stdout } = await execFile("powershell.exe",
+      ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", storeLicenseScript, mode],
+      { windowsHide: true, timeout: mode === "purchase" ? 10 * 60 * 1000 : 30 * 1000 });
+    const parsed = JSON.parse(stdout.trim().split(/\r?\n/).pop());
+    return { ok: Boolean(parsed.ok), pro: Boolean(parsed.pro), error: parsed.error || null };
+  } catch (error) {
+    return { ok: false, pro: false, error: error.message };
+  }
+}
+
 createServer(async (request, response) => {
   const pathname = decodeURIComponent(new URL(request.url, `http://${request.headers.host}`).pathname);
   if (request.method === "GET" && pathname === "/api/capabilities") {
-    sendJson(response, 200, { tools: "all", engine: "local" });
+    sendJson(response, 200, { tools: "all", engine: "local", billing: storeBilling ? "store" : "dev" });
+    return;
+  }
+  if (pathname === "/api/license" && (request.method === "GET" || request.method === "POST")) {
+    sendJson(response, 200, await runStoreLicense(request.method === "POST" ? "purchase" : "status"));
     return;
   }
   if (request.method==='POST' && pathname==='/api/convert') {

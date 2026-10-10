@@ -46,6 +46,38 @@ samples.splice(0, samples.length, ...allSamples.filter((sample) => !sample.tool 
 const toolAvailable = (name) => tools.some((tool) => tool.name === name);
 // Hosted builds have no purchase flow, so they show no PRO UI and keep every tool open.
 let hostedMode = true;
+// Inside the Microsoft Store package, Pro is a real $4.99/month Store subscription
+// checked by the local server (/api/license); elsewhere the PRO pill stays a dev toggle.
+let storeBilling = false;
+
+function updateProButton() {
+  $("#proToggle").textContent = state.pro ? "♛ PRO ACTIVE" : (storeBilling ? "♛ Upgrade · $4.99/mo" : "♛ PRO");
+}
+
+async function refreshLicense() {
+  try {
+    const license = await (await fetch("/api/license", { cache: "no-store" })).json();
+    state.pro = Boolean(license.pro);
+  } catch (error) {
+    state.pro = false;
+  }
+  updateProButton();
+  renderTools();
+}
+
+async function startPurchase() {
+  const button = $("#proToggle");
+  button.disabled = true;
+  try {
+    const license = await (await fetch("/api/license", { method: "POST" })).json();
+    state.pro = Boolean(license.pro);
+  } catch (error) {
+    /* stay on the free tier */
+  }
+  button.disabled = false;
+  updateProButton();
+  renderTools();
+}
 
 async function applyCapabilities() {
   try {
@@ -57,6 +89,11 @@ async function applyCapabilities() {
     if (!names) {
       hostedMode = false;
       $("#proToggle").classList.remove("hidden");
+      if (caps.billing === "store") {
+        storeBilling = true;
+        updateProButton();
+        refreshLicense();
+      }
     }
     const visible = (name) => !names || names.has(name);
     tools.splice(0, tools.length, ...allTools.filter((tool) => visible(tool.name)));
@@ -912,8 +949,11 @@ function showProLocked(toolName) {
   $("#result").classList.remove("hidden");
   $("#result").innerHTML = `
     <strong>♛ ${toolName} is Pro</strong>
-    <span>Free includes PDF to Word and Excel to PDF.</span>
+    <span>Free includes PDF to Word, PDF to Text and Excel to PDF.</span>
+    ${storeBilling ? `<button class="pro-pill" id="upgradeNowButton" type="button">♛ Upgrade · $4.99/mo</button>` : ""}
   `;
+  const upgrade = $("#upgradeNowButton");
+  if (upgrade) upgrade.addEventListener("click", startPurchase);
   $("#result").scrollIntoView({ behavior: "auto", block: "nearest" });
 }
 
@@ -1154,8 +1194,12 @@ $("#convertNowButton").addEventListener("click", (event) => {
 });
 $("#closeModalButton").addEventListener("click", () => $("#fileModal").classList.add("hidden"));
 $("#proToggle").addEventListener("click", () => {
+  if (storeBilling) {
+    if (!state.pro) startPurchase();
+    return;
+  }
   state.pro = !state.pro;
-  $("#proToggle").textContent = state.pro ? "♛ PRO ACTIVE" : "♛ PRO";
+  updateProButton();
   renderTools();
 });
 $("#addBatchButton").addEventListener("click", queueDemoFiles);
