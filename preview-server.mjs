@@ -282,7 +282,15 @@ async function runStoreLicense(mode) {
 }
 
 createServer(async (request, response) => {
-  const pathname = decodeURIComponent(new URL(request.url, `http://${request.headers.host}`).pathname);
+  let pathname;
+  try {
+    pathname = decodeURIComponent(new URL(request.url, `http://${request.headers.host}`).pathname);
+  } catch {
+    // Malformed URL/percent-encoding/Host must not throw out of the async handler (would crash the process).
+    response.writeHead(400);
+    response.end("Bad request");
+    return;
+  }
   if (request.method === "GET" && pathname === "/api/capabilities") {
     sendJson(response, 200, { tools: "all", engine: "local", billing: storeBilling ? "store" : "dev" });
     return;
@@ -291,7 +299,8 @@ createServer(async (request, response) => {
     // Only the app's own page may query/trigger billing: blocks cross-site requests and DNS rebinding.
     const hostOk = /^(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$/i.test(request.headers.host || "");
     const origin = request.headers.origin;
-    const originOk = !origin || new URL(origin).host === request.headers.host;
+    let originOk = !origin;
+    if (origin) { try { originOk = new URL(origin).host === request.headers.host; } catch { originOk = false; } }
     const headerOk = request.method === "GET" || request.headers["x-convertory-request"] === "1";
     if (!hostOk || !originOk || !headerOk) {
       sendJson(response, 403, { ok: false, pro: false, error: "Forbidden" });
