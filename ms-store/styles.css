@@ -39,27 +39,32 @@ button {
   min-height: 100vh;
   display: grid;
   place-items: center;
-  padding: 20px;
+  padding: 0;
   background: radial-gradient(circle at 50% 10%, rgba(0, 140, 255, .16), transparent 34%), #1d1d1d;
 }
 
+/* Desktop/tablet: fill the whole window (no phone mockup frame). The
+   .screen column is centred with a max width; compact rules key off it. */
 .phone {
-  width: max(240px, min(560px, calc(100vw - 28px), calc((100vh - 40px) * .56)));
-  height: min(1000px, calc(100vh - 40px), calc((100vw - 28px) * 1.78));
-  border: 8px solid #17365f;
-  border-radius: 38px;
+  width: 100vw;
+  height: 100vh;
+  border: 0;
+  border-radius: 0;
   background: #001127;
   overflow: hidden;
-  box-shadow: 0 28px 70px rgba(0, 0, 0, .5);
-  container-type: inline-size;
-  container-name: phone;
+  display: flex;
+  justify-content: center;
 }
 
 .screen {
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 760px;
   height: 100%;
   overflow: hidden;
+  container-type: inline-size;
+  container-name: phone;
   background:
     radial-gradient(circle at 78% 20%, rgba(255, 212, 0, .12), transparent 22%),
     radial-gradient(circle at 18% 18%, rgba(0, 140, 255, .28), transparent 24%),
@@ -872,14 +877,8 @@ button {
   color: var(--yellow);
   text-shadow: 0 0 18px rgba(255, 212, 0, .45);
 }
-@media (max-width: 520px) {
-  .stage { padding: 0; }
-  .phone {
-    width: 100vw;
-    height: 100vh;
-    border: 0;
-    border-radius: 0;
-  }
+@media (min-width: 521px) {
+  .status-bar { display: none; }
 }
 
 /* Compact layout keyed to the phone mockup's own rendered width, not the

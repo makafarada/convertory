@@ -922,7 +922,7 @@ async function runConversion() {
     const previewMarkup = downloadUrl && !viewText ? await buildPreviewMarkup(downloadUrl, output) : "";
     $("#result").innerHTML = `
       <strong>✓ ${escapeHtml(output)}</strong>
-      <span>${inline ? "" : `Saved to Downloads\Convertory\${escapeHtml(state.lastSavedFile || output)} • `}${escapeHtml(selectedTool)}</span>
+      <span>${inline ? "" : `Saved to Downloads\\Convertory\\${escapeHtml(state.lastSavedFile || output)} • `}${escapeHtml(selectedTool)}</span>
       <span>${escapeHtml(state.lastConversionNote || '')}</span>
       ${previewMarkup}
       ${downloadUrl ? `
