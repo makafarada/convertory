@@ -5,8 +5,8 @@
 param([Parameter(Position = 0)][string]$Mode = "status")
 
 $ErrorActionPreference = "Stop"
-$AddOnStoreId = "9P2L8XSV9GK3"      # convertory_pro_monthly
-$AddOnOfferToken = "convertory_pro_monthly"
+$AddOnStoreId = "9N4XG9JQ0KN2"      # convertory_pro_monthly_v2 (correct TRY/ARS/etc. prices)
+$AddOnOfferToken = "convertory_pro_monthly_v2"
 
 function Out-Result($ok, $pro, $err) {
   @{ ok = $ok; pro = $pro; error = $err } | ConvertTo-Json -Compress
