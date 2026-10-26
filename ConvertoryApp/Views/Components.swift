@@ -6,17 +6,66 @@ import VisionKit
 // MARK: - Look
 
 enum Theme {
-    static let paper = Color(UIColor { trait in
-        trait.userInterfaceStyle == .dark
-            ? UIColor(red: 0.075, green: 0.082, blue: 0.09, alpha: 1)
-            : UIColor(red: 0.965, green: 0.949, blue: 0.918, alpha: 1)
-    })
+    // Same palette as the Convertory web, Windows and Android apps (ms-store/styles.css).
+    static let yellow = Color(red: 1, green: 0.831, blue: 0)                 // #FFD400
+    static let blue = Color(red: 0, green: 0.533, blue: 1)                   // #0088FF
+    static let cyan = Color(red: 0, green: 0.718, blue: 1)                   // #00B7FF
+    static let ink = Color(red: 0.035, green: 0.082, blue: 0.149)            // #091526, text on yellow
+    static let text = Color(red: 0.969, green: 0.984, blue: 1)               // #F7FBFF
+    static let muted = Color(red: 0.616, green: 0.725, blue: 0.875)          // #9DB9DF
+    static let paper = Color(red: 0.0, green: 0.071, blue: 0.161)            // #001229
+    static let card = Color(red: 0.012, green: 0.118, blue: 0.243)           // #031E3E
+    static let line = Color(red: 0, green: 0.533, blue: 1).opacity(0.45)     // rgba(0,136,255,.45)
+}
 
-    static let card = Color(UIColor { trait in
-        trait.userInterfaceStyle == .dark
-            ? UIColor(red: 0.125, green: 0.135, blue: 0.145, alpha: 1)
-            : UIColor(red: 1, green: 0.995, blue: 0.98, alpha: 1)
-    })
+/// The dark navy screen with soft yellow and blue glows used across every Convertory app.
+struct ScreenBackground: View {
+    var body: some View {
+        ZStack {
+            LinearGradient(colors: [Color(red: 0.024, green: 0.102, blue: 0.22),
+                                    Color(red: 0, green: 0.071, blue: 0.161),
+                                    Color(red: 0.024, green: 0.102, blue: 0.22)],
+                           startPoint: .top, endPoint: .bottom)
+            RadialGradient(colors: [Color(red: 0, green: 0.549, blue: 1).opacity(0.28), .clear],
+                           center: UnitPoint(x: 0.18, y: 0.12), startRadius: 0, endRadius: 360)
+            RadialGradient(colors: [Theme.yellow.opacity(0.12), .clear],
+                           center: UnitPoint(x: 0.82, y: 0.18), startRadius: 0, endRadius: 300)
+        }
+        .ignoresSafeArea()
+    }
+}
+
+/// Yellow call-to-action, like the primary button in the other Convertory apps.
+struct PrimaryButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.headline.weight(.heavy))
+            .foregroundStyle(Theme.ink)
+            .padding(.vertical, 14)
+            .padding(.horizontal, 16)
+            .frame(maxWidth: .infinity)
+            .background(Theme.yellow, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1) : 0.4)
+    }
+}
+
+/// Blue-outlined secondary button.
+struct SecondaryButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.headline)
+            .foregroundStyle(Theme.text)
+            .padding(.vertical, 14)
+            .padding(.horizontal, 16)
+            .frame(maxWidth: .infinity)
+            .background(Theme.card.opacity(0.9), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Theme.cyan.opacity(0.8), lineWidth: 1.2))
+            .opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1) : 0.4)
+    }
 }
 
 struct SymbolTile: View {
@@ -25,11 +74,13 @@ struct SymbolTile: View {
     var size: CGFloat = 44
 
     var body: some View {
+        let shape = RoundedRectangle(cornerRadius: size * 0.28, style: .continuous)
         Image(systemName: symbol)
             .font(.system(size: size * 0.45, weight: .semibold))
-            .foregroundStyle(.white)
+            .foregroundStyle(tint)
             .frame(width: size, height: size)
-            .background(tint.gradient, in: RoundedRectangle(cornerRadius: size * 0.28, style: .continuous))
+            .background(tint.opacity(0.16), in: shape)
+            .overlay(shape.strokeBorder(tint.opacity(0.75), lineWidth: 1.2))
     }
 }
 
@@ -44,7 +95,7 @@ struct PDFPreview: UIViewRepresentable {
         view.displayMode = .singlePageContinuous
         view.displayDirection = .vertical
         view.pageShadowsEnabled = false
-        view.backgroundColor = .secondarySystemBackground
+        view.backgroundColor = UIColor(red: 0, green: 0.071, blue: 0.161, alpha: 1)
         view.document = PDFDocument(url: url)
         return view
     }
@@ -134,7 +185,8 @@ struct BusyOverlay: View {
                 Text(title).font(.subheadline.weight(.medium))
             }
             .padding(24)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Theme.line, lineWidth: 1))
         }
         .transition(.opacity)
     }

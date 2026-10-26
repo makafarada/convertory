@@ -21,11 +21,12 @@ struct LibraryView: View {
                             let doomed = offsets.map { library.files[$0] }
                             doomed.forEach(library.delete)
                         }
+                        .listRowBackground(Theme.card)
                     }
                     .scrollContentBackground(.hidden)
                 }
             }
-            .background(Theme.paper.ignoresSafeArea())
+            .background(ScreenBackground())
             .navigationTitle("Library")
             .navigationDestination(for: LibraryFile.self) { ResultView(file: $0) }
             .toolbar { if !library.files.isEmpty { ToolbarItem(placement: .topBarTrailing) { EditButton() } } }

@@ -11,7 +11,7 @@ enum DemoSeed {
         let data = renderer.pdfData { context in
             for page in 1...3 {
                 context.beginPage()
-                UIColor(red: 0.86, green: 0.32, blue: 0.16, alpha: 1).setFill()
+                UIColor(red: 0, green: 0.533, blue: 1, alpha: 1).setFill()
                 UIRectFill(CGRect(x: 48, y: 52, width: 6, height: 34))
                 (title as NSString).draw(at: CGPoint(x: 66, y: 52), withAttributes: [
                     .font: UIFont.systemFont(ofSize: 28, weight: .bold)

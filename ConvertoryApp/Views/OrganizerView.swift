@@ -13,6 +13,7 @@ struct OrganizerView: View {
                 }
                 .onMove { model.pageEdits.move(fromOffsets: $0, toOffset: $1) }
                 .onDelete { model.pageEdits.remove(atOffsets: $0) }
+                .listRowBackground(Theme.card)
             } header: {
                 Text("\(model.pageEdits.count) page\(model.pageEdits.count == 1 ? "" : "s")")
             } footer: {

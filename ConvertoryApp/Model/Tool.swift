@@ -60,14 +60,14 @@ enum Tool: String, CaseIterable, Identifiable, Hashable {
 
     var tint: Color {
         switch self {
-        case .scan: return Color(red: 0.86, green: 0.32, blue: 0.16)
-        case .imagesToPDF: return Color(red: 0.12, green: 0.45, blue: 0.62)
-        case .merge: return Color(red: 0.35, green: 0.30, blue: 0.70)
-        case .organize: return Color(red: 0.10, green: 0.50, blue: 0.40)
-        case .watermark: return Color(red: 0.70, green: 0.35, blue: 0.10)
-        case .compress: return Color(red: 0.20, green: 0.52, blue: 0.20)
-        case .extractText: return Color(red: 0.62, green: 0.20, blue: 0.40)
-        case .pdfToWord: return Color(red: 0.16, green: 0.38, blue: 0.75)
+        case .scan: return Color(red: 1, green: 0.831, blue: 0)
+        case .imagesToPDF: return Color(red: 0, green: 0.718, blue: 1)
+        case .merge: return Color(red: 0.62, green: 0.45, blue: 1)
+        case .organize: return Color(red: 0.07, green: 0.77, blue: 0.79)
+        case .watermark: return Color(red: 0.95, green: 0.31, blue: 0.53)
+        case .compress: return Color(red: 0.12, green: 0.75, blue: 0.37)
+        case .extractText: return Color(red: 1, green: 0.36, blue: 0.40)
+        case .pdfToWord: return Color(red: 0.2, green: 0.6, blue: 1)
         }
     }
 

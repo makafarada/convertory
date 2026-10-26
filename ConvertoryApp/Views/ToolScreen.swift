@@ -16,7 +16,7 @@ struct ToolScreen: View {
 
     var body: some View {
         ZStack {
-            Theme.paper.ignoresSafeArea()
+            ScreenBackground()
             content
             if model.busy {
                 BusyOverlay(progress: model.progress, title: model.items.isEmpty && model.pageEdits.isEmpty ? "Opening…" : "Working…")
@@ -89,6 +89,7 @@ struct ToolScreen: View {
                         Text("Add at least \(tool.minimumItems) files.")
                     }
                 }
+                .listRowBackground(Theme.card)
 
                 if tool.allowsMultiple { addMoreSection }
                 optionsSection
@@ -124,27 +125,23 @@ struct ToolScreen: View {
                 Button { showScanner = true } label: {
                     Label("Scan with camera", systemImage: "camera.viewfinder").frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
+                .buttonStyle(PrimaryButtonStyle())
             }
             PhotosPicker(selection: $photoSelection, maxSelectionCount: 40, matching: .images) {
                 Label("Choose from Photos", systemImage: "photo.on.rectangle").frame(maxWidth: .infinity)
             }
-            .buttonStyle(.bordered)
-            .controlSize(.large)
+            .buttonStyle(SecondaryButtonStyle())
         }
         if tool.input == .images {
             Button { showFiles = true } label: {
                 Label("Choose from Files", systemImage: "folder").frame(maxWidth: .infinity)
             }
-            .buttonStyle(.bordered)
-            .controlSize(.large)
+            .buttonStyle(SecondaryButtonStyle())
         } else {
             Button { showFiles = true } label: {
                 Label("Choose from Files", systemImage: "folder").frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
+            .buttonStyle(PrimaryButtonStyle())
         }
     }
 
@@ -160,6 +157,7 @@ struct ToolScreen: View {
             }
             Button { showFiles = true } label: { Label("Add from Files", systemImage: "folder.badge.plus") }
         }
+        .listRowBackground(Theme.card)
     }
 
     // MARK: Options
@@ -174,6 +172,7 @@ struct ToolScreen: View {
                 }
                 Toggle("Make text searchable", isOn: $model.searchable)
             }
+            .listRowBackground(Theme.card)
         case .watermark:
             Section("Watermark") {
                 TextField("Text on every page", text: $model.watermarkText)
@@ -187,6 +186,7 @@ struct ToolScreen: View {
                     Slider(value: $model.watermarkOpacity, in: 0.08...0.6)
                 }
             }
+            .listRowBackground(Theme.card)
         case .compress:
             Section {
                 Picker("Quality", selection: $model.compressLevel) {
@@ -198,6 +198,7 @@ struct ToolScreen: View {
             } footer: {
                 Text("\(model.compressLevel.detail). Pages are re-rendered as images, so text is no longer selectable in the compressed copy.")
             }
+            .listRowBackground(Theme.card)
         case .pdfToWord:
             Section {} footer: {
                 Text("Headings, bold text and paragraphs are rebuilt as editable Word text. Pictures and complex layouts are not carried over. Scanned pages are read with text recognition.")
@@ -220,13 +221,12 @@ struct ToolScreen: View {
                 Button { model.run() } label: {
                     Text(tool.actionTitle).font(.headline).frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
+                .buttonStyle(PrimaryButtonStyle())
                 .disabled(!model.canRun)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
             }
-            .background(.bar)
+            .background(Theme.paper.opacity(0.96))
         }
     }
 }
@@ -244,7 +244,7 @@ private struct ItemRow: View {
                 }
             }
             .frame(width: 42, height: 54)
-            .background(Color.secondary.opacity(0.12))
+            .background(Theme.paper)
             .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
 
             VStack(alignment: .leading, spacing: 2) {

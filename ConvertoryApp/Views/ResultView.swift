@@ -40,7 +40,7 @@ struct ResultView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(16)
             }
-            .background(Theme.paper)
+            .background(ScreenBackground())
         }
     }
 
@@ -57,7 +57,7 @@ struct ResultView: View {
                 ShareLink(item: file.url) {
                     Label("Share", systemImage: "square.and.arrow.up").frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(PrimaryButtonStyle())
                 if file.kind == .text {
                     Button {
                         UIPasteboard.general.string = text
@@ -66,13 +66,13 @@ struct ResultView: View {
                         Label(copied ? "Copied" : "Copy", systemImage: copied ? "checkmark" : "doc.on.doc")
                             .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(SecondaryButtonStyle())
                     .disabled(text.isEmpty)
                 }
             }
             .controlSize(.large)
         }
         .padding(16)
-        .background(.bar)
+        .background(Theme.paper.opacity(0.96))
     }
 }

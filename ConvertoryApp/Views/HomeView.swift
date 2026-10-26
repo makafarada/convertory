@@ -26,7 +26,7 @@ struct HomeView: View {
                 .padding(.horizontal, 16)
                 .padding(.bottom, 24)
             }
-            .background(Theme.paper.ignoresSafeArea())
+            .background(ScreenBackground())
             .navigationTitle("Convertory")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -73,7 +73,7 @@ private struct HeroCard: View {
         }
         .padding(18)
         .background(Theme.card, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(Tool.scan.tint.opacity(0.35), lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(Tool.scan.tint.opacity(0.8), lineWidth: 1.5))
     }
 }
 
@@ -96,5 +96,6 @@ private struct ToolCard: View {
         .frame(maxWidth: .infinity, minHeight: 138, alignment: .topLeading)
         .padding(14)
         .background(Theme.card, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(Theme.line, lineWidth: 1))
     }
 }

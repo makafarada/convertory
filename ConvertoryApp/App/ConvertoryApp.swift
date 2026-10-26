@@ -32,9 +32,27 @@ struct ConvertoryApp: App {
     @StateObject private var router = Router()
     @StateObject private var library = LibraryStore.shared
 
+    init() {
+        // Navy bars to match the other Convertory apps.
+        let nav = UINavigationBarAppearance()
+        nav.configureWithTransparentBackground()
+        nav.titleTextAttributes = [.foregroundColor: UIColor(Theme.text)]
+        nav.largeTitleTextAttributes = [.foregroundColor: UIColor(Theme.text)]
+        UINavigationBar.appearance().standardAppearance = nav
+        UINavigationBar.appearance().scrollEdgeAppearance = nav
+        let tab = UITabBarAppearance()
+        tab.configureWithOpaqueBackground()
+        tab.backgroundColor = UIColor(red: 0, green: 0.071, blue: 0.161, alpha: 0.98)
+        tab.shadowColor = UIColor(Theme.line)
+        UITabBar.appearance().standardAppearance = tab
+        UITabBar.appearance().scrollEdgeAppearance = tab
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()
+                .preferredColorScheme(.dark)
+                .tint(Theme.yellow)
                 .environmentObject(router)
                 .environmentObject(library)
                 .onOpenURL { url in router.receive([url]) }
