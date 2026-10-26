@@ -38,8 +38,10 @@ final class ScreenshotTests: XCTestCase {
 
     func test01Home() {
         let app = launch()
-        _ = app.tabBars.firstMatch.waitForExistence(timeout: 15)
+        _ = app.buttons["Library"].firstMatch.waitForExistence(timeout: 15)
         shot("01-home")
+        app.swipeUp()
+        shot("01b-home-more")
         app.terminate()
     }
 
@@ -67,7 +69,7 @@ final class ScreenshotTests: XCTestCase {
 
     func test08Library() {
         let app = launch()
-        let tab = app.tabBars.buttons["Library"]
+        let tab = app.buttons["Library"].firstMatch
         _ = tab.waitForExistence(timeout: 15)
         tab.tap()
         shot("08-library")

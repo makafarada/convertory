@@ -34,6 +34,27 @@ enum DemoSeed {
         return url
     }
 
+    /// A large picture-only PDF, like a phone scan, so Compress has something to shrink.
+    private static func makePhotoPDF(name: String) -> URL {
+        let size = CGSize(width: 2000, height: 2800)
+        let image = UIGraphicsImageRenderer(size: size).image { ctx in
+            UIColor(white: 0.97, alpha: 1).setFill()
+            ctx.fill(CGRect(origin: .zero, size: size))
+            for i in 0..<1800 {
+                UIColor(hue: CGFloat((i * 7) % 100) / 100, saturation: 0.25, brightness: 0.85, alpha: 0.6).setFill()
+                ctx.fill(CGRect(x: (i * 37) % 1900, y: (i * 53) % 2700, width: 120, height: 60))
+            }
+            ("Signed contract" as NSString).draw(at: CGPoint(x: 140, y: 200), withAttributes: [
+                .font: UIFont.systemFont(ofSize: 150, weight: .bold), .foregroundColor: UIColor.black])
+        }
+        let png = Inbox.folder.appendingPathComponent("\(name).png")
+        try? image.pngData()?.write(to: png)
+        let pdf = try? Engine.imagesToPDF([png, png, png], layout: .a4, searchable: false, prefix: "DemoPhoto")
+        let target = Inbox.folder.appendingPathComponent("\(name).pdf")
+        if let pdf { try? FileManager.default.removeItem(at: target); try? FileManager.default.moveItem(at: pdf, to: target) }
+        return target
+    }
+
     static func inputs(for tool: Tool) -> [URL] {
         switch tool {
         case .merge:
@@ -41,6 +62,8 @@ enum DemoSeed {
                 makePDF(title: "Lease agreement", lines: sampleLines, name: "Lease agreement"),
                 makePDF(title: "Signed addendum", lines: sampleLines, name: "Signed addendum")
             ]
+        case .compress:
+            return [makePhotoPDF(name: "Signed contract (scan)")]
         case .scan, .imagesToPDF:
             return []
         default:
@@ -59,7 +82,11 @@ enum DemoSeed {
     /// Called once at launch: seeds the Library and, with `-demoTool <rawValue>`, opens that tool with sample files.
     @MainActor
     static func apply(to router: Router) {
-        installLibrary()
+        let docs = LibraryStore.folder
+        for url in (try? FileManager.default.contentsOfDirectory(at: docs, includingPropertiesForKeys: nil)) ?? [] {
+            try? FileManager.default.removeItem(at: url)
+        }
+        if !ProcessInfo.processInfo.arguments.contains("-demoTool") { installLibrary() }
         let args = ProcessInfo.processInfo.arguments
         if let i = args.firstIndex(of: "-demoTool"), i + 1 < args.count,
            let tool = Tool(rawValue: args[i + 1]) {
