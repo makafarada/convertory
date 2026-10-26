@@ -73,7 +73,29 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         TEST_HOST: $(BUILT_PRODUCTS_DIR)/Convertory.app/Convertory
         BUNDLE_LOADER: $(TEST_HOST)
+  ConvertoryUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: ConvertoryUITests
+    dependencies:
+      - target: Convertory
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.convertory.ios.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: Convertory
 schemes:
+  ConvertoryUI:
+    build:
+      targets:
+        Convertory: all
+        ConvertoryUITests: [test]
+    test:
+      targets:
+        - ConvertoryUITests
+    run:
+      config: Debug
   Convertory:
     build:
       targets:

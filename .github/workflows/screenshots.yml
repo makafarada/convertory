@@ -1,0 +1,67 @@
+name: App Store screenshots
+
+# Boots an iPhone and an iPad simulator, runs the UI tests with sample content (-seedDemo, Debug only)
+# and publishes the screenshots as build artifacts.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  shots:
+    runs-on: macos-26
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: iphone
+            device: "iPhone 17 Pro Max"
+          - name: ipad
+            device: "iPad Pro 13-inch (M5)"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode and generate project
+        run: |
+          set -e
+          newest=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+          sudo xcode-select -s "$newest/Contents/Developer"
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Boot simulator
+        run: |
+          set -e
+          xcrun simctl list devices available | grep -E "iPhone|iPad" || true
+          UDID=$(xcrun simctl list devices available | grep -F "${{ matrix.device }} (" | head -1 | grep -oE "[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}")
+          test -n "$UDID" || { echo "device not found: ${{ matrix.device }}"; exit 1; }
+          echo "UDID=$UDID" >> "$GITHUB_ENV"
+          xcrun simctl boot "$UDID" || true
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl status_bar "$UDID" override --time 9:41 --batteryState charged --batteryLevel 100 --cellularMode active --cellularBars 4 --wifiBars 3
+
+      - name: Run screenshot tests
+        run: |
+          set -eo pipefail
+          xcodebuild test \
+            -project Convertory.xcodeproj \
+            -scheme ConvertoryUI \
+            -destination "platform=iOS Simulator,id=$UDID" \
+            -resultBundlePath "$RUNNER_TEMP/ui.xcresult" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Export screenshots
+        if: always()
+        run: |
+          set -e
+          mkdir -p "$RUNNER_TEMP/shots"
+          xcrun xcresulttool export attachments --path "$RUNNER_TEMP/ui.xcresult" --output-path "$RUNNER_TEMP/shots" || true
+          ls -la "$RUNNER_TEMP/shots" | head -60
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots-${{ matrix.name }}
+          path: ${{ runner.temp }}/shots
+          if-no-files-found: warn
+          retention-days: 14

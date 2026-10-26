@@ -38,7 +38,12 @@ struct ConvertoryApp: App {
                 .environmentObject(router)
                 .environmentObject(library)
                 .onOpenURL { url in router.receive([url]) }
-                .task { library.reload() }
+                .task {
+                    #if DEBUG
+                    if DemoSeed.isRequested { DemoSeed.apply(to: router) }
+                    #endif
+                    library.reload()
+                }
         }
     }
 }
