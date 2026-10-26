@@ -2,22 +2,10 @@
   "name": "convertory-pages-functions",
   "private": true,
   "type": "module",
-  "description": "Cloudflare Pages Functions for convertory-app.pages.dev (Merge PDF, Watermark PDF, Image to PDF, PDF to Text). See functions/api/convert.js. Also carries the Capacitor iOS shell (ms-store/ served as-is, no bundler).",
-  "scripts": {
-    "ios:add": "node scripts/ios-prepare-web.mjs && npx cap add ios",
-    "ios:sync": "node scripts/ios-prepare-web.mjs && npx cap sync ios",
-    "ios:open": "npx cap open ios"
-  },
+  "description": "Cloudflare Pages Functions for convertory-app.pages.dev (Merge PDF, Watermark PDF, Image to PDF, PDF to Text). See functions/api/convert.js.",
   "dependencies": {
     "pdf-lib": "^1.17.1",
     "@pdf-lib/fontkit": "^1.1.1",
-    "pdfjs-dist": "^5.5.207",
-    "@capacitor/core": "^8.5.2",
-    "@capacitor/ios": "^8.5.2",
-    "@capacitor/splash-screen": "^8.0.2",
-    "@capacitor/status-bar": "^8.0.3"
-  },
-  "devDependencies": {
-    "@capacitor/cli": "^8.5.2"
+    "pdfjs-dist": "^5.5.207"
   }
 }

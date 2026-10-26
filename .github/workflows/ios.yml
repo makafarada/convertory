@@ -1,16 +1,14 @@
 name: iOS build (TestFlight)
 
-# Builds the iOS version without needing a local Mac: GitHub's rented macOS
-# runner compiles the Capacitor shell, Xcode archives and signs it, and the
-# .ipa is uploaded to TestFlight. Same pattern as LingoRaven
-# (.github/workflows/ios.yml in the lingoraven repo).
+# Native Swift/SwiftUI app (ConvertoryApp/). The Xcode project is generated from
+# project.yml with XcodeGen on the runner, unit tests run on an iPhone simulator,
+# then the app is archived, signed through the App Store Connect API key and
+# uploaded to TestFlight. No Mac needed.
 #
 # Required repo secrets (Settings > Secrets and variables > Actions):
 #   ASC_KEY_ID     App Store Connect API key's Key ID
 #   ASC_ISSUER_ID  Issuer ID from the same page
 #   ASC_KEY_P8     Full contents of the downloaded AuthKey_XXXX.p8 file (including BEGIN/END lines)
-#
-# Run manually: Actions tab > iOS build (TestFlight) > Run workflow.
 
 on:
   workflow_dispatch:
@@ -42,17 +40,33 @@ jobs:
           xcodebuild -version
           xcodebuild -showsdks | grep -i iphoneos
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Generate Xcode project
+        run: |
+          set -e
+          brew install xcodegen
+          xcodegen generate
+          xcodebuild -list -project Convertory.xcodeproj
+
+      - name: Unit tests (iPhone simulator)
+        run: |
+          set -eo pipefail
+          UDID=$(xcrun simctl list devices available | grep -E "iPhone" | head -1 | grep -oE "[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}")
+          echo "Simulator: $UDID"
+          xcodebuild test \
+            -project Convertory.xcodeproj \
+            -scheme Convertory \
+            -destination "platform=iOS Simulator,id=$UDID" \
+            -resultBundlePath "$RUNNER_TEMP/tests.xcresult" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          node-version: "22"
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Sync Capacitor iOS shell
-        run: npm run ios:sync
+          name: test-results-${{ github.run_number }}
+          path: ${{ runner.temp }}/tests.xcresult
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Write API key
         env:
@@ -70,11 +84,11 @@ jobs:
         run: |
           set -e
           xcodebuild archive \
-            -project ios/App/App.xcodeproj \
-            -scheme App \
+            -project Convertory.xcodeproj \
+            -scheme Convertory \
             -configuration Release \
             -destination 'generic/platform=iOS' \
-            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -archivePath "$RUNNER_TEMP/Convertory.xcarchive" \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
@@ -90,8 +104,8 @@ jobs:
         run: |
           set -e
           xcodebuild -exportArchive \
-            -archivePath "$RUNNER_TEMP/App.xcarchive" \
-            -exportOptionsPlist ios/ExportOptions.plist \
+            -archivePath "$RUNNER_TEMP/Convertory.xcarchive" \
+            -exportOptionsPlist Config/ExportOptions.plist \
             -exportPath "$RUNNER_TEMP/ipa" \
             -allowProvisioningUpdates \
             -authenticationKeyPath "$HOME/private_keys/AuthKey_$ASC_KEY_ID.p8" \
