@@ -78,8 +78,10 @@ struct ToolScreen: View {
             List {
                 Section {
                     ForEach(model.items) { ItemRow(item: $0) }
-                        .onDelete(perform: tool.allowsMultiple ? model.remove : nil)
-                        .onMove(perform: tool.allowsMultiple ? model.move : nil)
+                        .onDelete { offsets in if tool.allowsMultiple { model.remove(at: offsets) } }
+                        .onMove { source, destination in
+                            if tool.allowsMultiple { model.move(from: source, to: destination) }
+                        }
                 } header: {
                     if tool.allowsMultiple { Text("\(model.items.count) in order") }
                 } footer: {
@@ -131,11 +133,19 @@ struct ToolScreen: View {
             .buttonStyle(.bordered)
             .controlSize(.large)
         }
-        Button { showFiles = true } label: {
-            Label("Choose from Files", systemImage: "folder").frame(maxWidth: .infinity)
+        if tool.input == .images {
+            Button { showFiles = true } label: {
+                Label("Choose from Files", systemImage: "folder").frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.large)
+        } else {
+            Button { showFiles = true } label: {
+                Label("Choose from Files", systemImage: "folder").frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
         }
-        .buttonStyle(tool.input == .images ? .bordered : .borderedProminent)
-        .controlSize(.large)
     }
 
     private var addMoreSection: some View {
