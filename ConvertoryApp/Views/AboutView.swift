@@ -16,14 +16,14 @@ struct AboutView: View {
                 Section {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Convertory").font(.title2.bold())
-                        Text("Scan, combine, edit and read your documents without leaving your iPhone.")
+                        Text("Scan, combine, edit and read your documents without leaving your device.")
                             .foregroundStyle(.secondary)
                     }
                     .padding(.vertical, 4)
                 }
 
                 Section("Your privacy") {
-                    Label("Files are processed on this iPhone only.", systemImage: "iphone")
+                    Label("Files are processed on this device only.", systemImage: "iphone")
                     Label("Convertory has no network access of its own: nothing is uploaded.", systemImage: "icloud.slash")
                     Label("No account, no tracking, no ads.", systemImage: "hand.raised")
                     Label("Camera is used only by the document scanner you open.", systemImage: "camera")
@@ -31,7 +31,7 @@ struct AboutView: View {
                 .font(.subheadline)
 
                 Section("Where your files are") {
-                    Text("Everything you create is saved in the Files app under On My iPhone › Convertory. Delete it there or from the Library tab.")
+                    Text("Everything you create is saved in the Files app under On My \(UIDevice.current.model) › Convertory. Delete it there or from the Library tab.")
                         .font(.subheadline)
                 }
 

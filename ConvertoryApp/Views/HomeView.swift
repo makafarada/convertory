@@ -17,7 +17,7 @@ struct HomeView: View {
                     section("Edit a PDF", tools: [.organize, .watermark, .compress])
                     section("Get the content out", tools: [.extractText, .pdfToWord])
 
-                    Label("Everything runs on this iPhone. No account, no ads, no uploads.",
+                    Label("Everything runs on this device. No account, no ads, no uploads.",
                           systemImage: "lock.shield")
                         .font(.footnote)
                         .foregroundStyle(.secondary)

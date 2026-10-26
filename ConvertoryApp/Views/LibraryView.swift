@@ -10,7 +10,7 @@ struct LibraryView: View {
                     ContentUnavailableView(
                         "Nothing saved yet",
                         systemImage: "tray",
-                        description: Text("Files you make with Convertory are kept here and in the Files app under “On My iPhone › Convertory”.")
+                        description: Text("Files you make with Convertory are kept here and in the Files app under “On My \(UIDevice.current.model) › Convertory”.")
                     )
                 } else {
                     List {
