@@ -246,6 +246,14 @@ final class EngineTests: XCTestCase {
         let page = try XCTUnwrap(PDFDocument(url: src)?.page(at: 0))
         let found = TableReader.words(on: page)
         XCTAssertGreaterThanOrEqual(found.count, 10, "words: \(found.map { "\($0.text)@\(Int($0.box.minX)),\(Int($0.box.midY))" })")
+        let raw = (page.string ?? "") as NSString
+        var dump = "STRING=\(raw.debugDescription) "
+        for i in 0..<min(raw.length, 40) {
+            let r = page.characterBounds(at: i)
+            dump += "[\(i)|\(raw.substring(with: NSRange(location: i, length: 1)))|\(Int(r.minX)),\(Int(r.minY)),\(Int(r.width)),\(Int(r.height))] "
+        }
+        dump += " WORDS=\(found.map { "\($0.text)@\(Int($0.box.minX)),\(Int($0.box.midY))" })"
+        XCTAssertLessThan(found.count, 0, "DIAG " + dump)
         let out = try Engine.pdfToExcel(src)
         defer { try? FileManager.default.removeItem(at: out) }
         XCTAssertEqual(out.pathExtension, "xlsx")
