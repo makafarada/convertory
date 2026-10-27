@@ -96,7 +96,6 @@ struct RootView: View {
     }
 
     private var chooserTools: [Tool] {
-        let isPDF = router.incoming.first?.pathExtension.lowercased() == "pdf"
-        return Tool.suggestions(forPDF: isPDF)
+        return Tool.suggestions(forExtension: router.incoming.first?.pathExtension ?? "")
     }
 }

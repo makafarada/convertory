@@ -192,6 +192,12 @@ final class ToolModel: ObservableObject {
                         return try Engine.extractText(from: urls[0], progress: report)
                     case .pdfToWord:
                         return try Engine.pdfToWord(urls[0], progress: report)
+                    case .wordToPDF:
+                        return try Engine.wordToPDF(urls[0], progress: report)
+                    case .pdfToPowerPoint:
+                        return try Engine.pdfToPowerPoint(urls[0], progress: report)
+                    case .pdfToExcel:
+                        return try Engine.pdfToExcel(urls[0], progress: report)
                     }
                 }.value
                 busy = false

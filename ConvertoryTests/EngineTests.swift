@@ -173,6 +173,122 @@ final class EngineTests: XCTestCase {
         XCTAssertTrue(blob.contains("Quarterly report"))
     }
 
+    // MARK: Office conversions
+
+    private func makeTablePDF() throws -> URL {
+        let renderer = UIGraphicsPDFRenderer(bounds: CGRect(x: 0, y: 0, width: 612, height: 792))
+        let rows: [[String]] = [
+            ["Item", "Qty", "Price"],
+            ["Apples", "12", "3.50"],
+            ["Pears", "7", "1,200.00"],
+            ["Plums", "30", "0.75"]
+        ]
+        let columns: [CGFloat] = [60, 260, 400]
+        let data = renderer.pdfData { context in
+            context.beginPage()
+            for (rowIndex, row) in rows.enumerated() {
+                for (columnIndex, cell) in row.enumerated() {
+                    (cell as NSString).draw(
+                        at: CGPoint(x: columns[columnIndex], y: 100 + CGFloat(rowIndex) * 30),
+                        withAttributes: [.font: UIFont.systemFont(ofSize: 16), .foregroundColor: UIColor.black])
+                }
+            }
+        }
+        let url = scratch.appendingPathComponent("\(UUID().uuidString).pdf")
+        try data.write(to: url)
+        return url
+    }
+
+    func testWordToPDFReadsDeflatedDocx() throws {
+        let data = try XCTUnwrap(Data(base64Encoded: Self.sampleDocxBase64))
+        let src = scratch.appendingPathComponent("sample.docx")
+        try data.write(to: src)
+        let out = try Engine.wordToPDF(src)
+        defer { try? FileManager.default.removeItem(at: out) }
+        XCTAssertEqual(out.pathExtension, "pdf")
+        let doc = try XCTUnwrap(PDFDocument(url: out))
+        let text = doc.string ?? ""
+        XCTAssertTrue(text.contains("Budget Overview"), "got: \(text)")
+        XCTAssertTrue(text.contains("compressed with deflate"), "got: \(text)")
+        XCTAssertTrue(text.contains("Laptop"), "got: \(text)")
+    }
+
+    func testWordToPDFRoundTripFromPDFToWord() throws {
+        let src = try makePDF(pages: ["Round trip sentence for the converter."])
+        let docx = try Engine.pdfToWord(src)
+        defer { try? FileManager.default.removeItem(at: docx) }
+        let out = try Engine.wordToPDF(docx)
+        defer { try? FileManager.default.removeItem(at: out) }
+        let text = PDFDocument(url: out)?.string ?? ""
+        XCTAssertTrue(text.contains("Round trip"), "got: \(text)")
+    }
+
+    func testWordToPDFRejectsOtherFiles() throws {
+        let src = try makePDF(pages: ["Not a Word file"])
+        XCTAssertThrowsError(try Engine.wordToPDF(src))
+    }
+
+    func testPDFToPowerPointMakesOneSlidePerPage() throws {
+        let src = try makePDF(pages: ["First page", "Second page"])
+        let out = try Engine.pdfToPowerPoint(src)
+        defer { try? FileManager.default.removeItem(at: out) }
+        XCTAssertEqual(out.pathExtension, "pptx")
+        let zip = try XCTUnwrap(ZipReader(url: out))
+        XCTAssertTrue(zip.contains("ppt/slides/slide1.xml"))
+        XCTAssertTrue(zip.contains("ppt/slides/slide2.xml"))
+        XCTAssertFalse(zip.contains("ppt/slides/slide3.xml"))
+        let image = try XCTUnwrap(zip.read("ppt/media/image1.jpeg"))
+        XCTAssertEqual(Array(image.prefix(2)), [0xFF, 0xD8], "not a JPEG")
+    }
+
+    func testPDFToExcelFindsColumns() throws {
+        let src = try makeTablePDF()
+        let out = try Engine.pdfToExcel(src)
+        defer { try? FileManager.default.removeItem(at: out) }
+        XCTAssertEqual(out.pathExtension, "xlsx")
+        let zip = try XCTUnwrap(ZipReader(url: out))
+        let sheet = String(decoding: try XCTUnwrap(zip.read("xl/worksheets/sheet1.xml")), as: UTF8.self)
+        XCTAssertTrue(sheet.contains("r=\"A1\""), "got: \(sheet)")
+        XCTAssertTrue(sheet.contains("r=\"C1\""), "got: \(sheet)")
+        XCTAssertTrue(sheet.contains("<v>12</v>"), "got: \(sheet)")
+        XCTAssertTrue(sheet.contains("<v>1200.00</v>"), "got: \(sheet)")
+        XCTAssertTrue(sheet.contains("Apples"), "got: \(sheet)")
+    }
+
+    func testPDFToExcelRefusesPlainProse() throws {
+        let src = try makePDF(pages: ["Just one line of ordinary prose."])
+        XCTAssertThrowsError(try Engine.pdfToExcel(src))
+    }
+
+    func testXlsxHelpers() {
+        XCTAssertEqual(XlsxWriter.columnName(0), "A")
+        XCTAssertEqual(XlsxWriter.columnName(25), "Z")
+        XCTAssertEqual(XlsxWriter.columnName(26), "AA")
+        XCTAssertEqual(XlsxWriter.number(from: "42"), "42")
+        XCTAssertEqual(XlsxWriter.number(from: "-3.5"), "-3.5")
+        XCTAssertEqual(XlsxWriter.number(from: "1,234.50"), "1234.50")
+        XCTAssertNil(XlsxWriter.number(from: "007"))
+        XCTAssertNil(XlsxWriter.number(from: "$5"))
+        XCTAssertNil(XlsxWriter.number(from: "12,34"))
+    }
+
+    private static let sampleDocxBase64 = [
+        "UEsDBBQAAAAIAGZEW11AE3eN3gAAAJwBAAATAAAAW0NvbnRlbnRfVHlwZXNdLnhtbH1QS07DMBC9iuUtiid0gRBK0gWUJbAoB7Ds",
+        "SWLhnzxuKbdn0pYuUNXlzPvqdetD8GKPhVyKvbxXrRQYTbIuTr383L42j3I9dNufjCSYGqmXc635CYDMjEGTShkjI2MqQVc+ywRZ",
+        "my89Iaza9gFMihVjberiIYfuBUe981VsDvw+xbJciucTb4nqpc7ZO6Mrw7CgcFVX0NMN4T7af+2aczPFyiOHZpfp7pzwzjsUZ1F8",
+        "6FLfdGA7+E7Fgk1mFzhC3S56JS+NozN40S9uuSSDRDxw8OqCBO3iXw84zj38AlBLAwQUAAAACABmRFtdNlfe3KIAAAAYAQAACwAA",
+        "AF9yZWxzLy5yZWxzjc87DsIwDAbgq0TeqQsDQqhpF4TUFZUDRImbRjQPJeF1ezIwUMTAaPv3Z7npHnZmN4rJeMdhXdXAyEmvjNMc",
+        "zsNxtYOubU40i1wSaTIhsbLiEocp57BHTHIiK1LlA7kyGX20IpcyagxCXoQm3NT1FuOnAUuT9YpD7NUa2PAM9I/tx9FIOnh5teTy",
+        "jxNfiSKLqClzuPuoUL3bVWEB2wYXL7YvUEsDBBQAAAAIAGZEW12dX5BWGQEAAFYCAAARAAAAd29yZC9kb2N1bWVudC54bWyVUl1L",
+        "AzEQ/CtL3m1aH0SO3hUUREFQsOLz9rK9C+SLZNvYf2/u+iFoi/iyQ9jZmR0288WnNbClmLR3tZhNpgLItV5p19XifflwdSsgMTqF",
+        "xjuqxY6SWDTzXCnfbiw5hiLgUpVr0TOHSsrU9mQxTXwgV3prHy1yecZOZh9ViL6llIq+NfJ6Or2RFrUTg+TKq92AYSyvcYQ33hmC",
+        "XG3R1OKRcNhsJmQzlyfOWLi526iOGF5Kmq2mPBB4pMU9+SR94C97nSBgxC5i6CFjghw1MznQDj7KrlByQ+ttiGVjUpA196BobZBp",
+        "clafV2aEvUX70/KJyZ6Zk0fu74l7n/jyhDxZXTB8xsA+/M9yVq7yp6U8ZJXHs8nvL9F8AVBLAQIUABQAAAAIAGZEW11AE3eN3gAA",
+        "AJwBAAATAAAAAAAAAAAAAACAAQAAAABbQ29udGVudF9UeXBlc10ueG1sUEsBAhQAFAAAAAgAZkRbXTZX3tyiAAAAGAEAAAsAAAAA",
+        "AAAAAAAAAIABDwEAAF9yZWxzLy5yZWxzUEsBAhQAFAAAAAgAZkRbXZ1fkFYZAQAAVgIAABEAAAAAAAAAAAAAAIAB2gEAAHdvcmQv",
+        "ZG9jdW1lbnQueG1sUEsFBgAAAAADAAMAuQAAACIDAAAAAA=="
+    ].joined()
+
     func testCRC32KnownValue() {
         // CRC-32 of "123456789" is 0xCBF43926
         XCTAssertEqual(CRC32.checksum(Data("123456789".utf8)), 0xCBF43926)

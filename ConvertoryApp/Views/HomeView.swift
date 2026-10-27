@@ -13,9 +13,9 @@ struct HomeView: View {
                     NavigationLink(value: Tool.scan) { HeroCard() }
                         .buttonStyle(.plain)
 
-                    section("Make a PDF", tools: [.imagesToPDF, .merge])
-                    section("Edit a PDF", tools: [.organize, .watermark, .compress])
-                    section("Get the content out", tools: [.extractText, .pdfToWord])
+                    section("Make a PDF", tools: [.imagesToPDF, .wordToPDF])
+                    section("Edit a PDF", tools: [.merge, .organize, .watermark, .compress])
+                    section("Get the content out", tools: [.extractText, .pdfToWord, .pdfToPowerPoint, .pdfToExcel])
 
                     Label("Everything runs on this device. No account, no ads, no uploads.",
                           systemImage: "lock.shield")

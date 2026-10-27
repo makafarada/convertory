@@ -203,6 +203,18 @@ struct ToolScreen: View {
             Section {} footer: {
                 Text("Headings, bold text and paragraphs are rebuilt as editable Word text. Pictures and complex layouts are not carried over. Scanned pages are read with text recognition.")
             }
+        case .wordToPDF:
+            Section {} footer: {
+                Text("Text, headings, bold and italic, lists and simple tables are kept. Pictures, fonts and the original page layout are not. Older .doc files aren't supported.")
+            }
+        case .pdfToPowerPoint:
+            Section {} footer: {
+                Text("Each page becomes one slide, shown as a picture of the page. The text on the slides can't be edited.")
+            }
+        case .pdfToExcel:
+            Section {} footer: {
+                Text("Rows and columns are worked out from where the text sits on each page, so it suits simple tables. Scanned pages are read with text recognition. Please check the result before you rely on it.")
+            }
         case .extractText:
             Section {} footer: {
                 Text("Pages without a text layer and pictures are read with on-device text recognition.")
@@ -240,7 +252,7 @@ private struct ItemRow: View {
                 if let thumbnail = item.thumbnail {
                     Image(uiImage: thumbnail).resizable().scaledToFill()
                 } else {
-                    Image(systemName: item.isPDF ? "doc" : "photo").foregroundStyle(.secondary)
+                    Image(systemName: item.isPDF ? "doc" : (item.isWord ? "doc.text" : "photo")).foregroundStyle(.secondary)
                 }
             }
             .frame(width: 42, height: 54)

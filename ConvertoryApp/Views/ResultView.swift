@@ -30,7 +30,7 @@ struct ResultView: View {
         switch file.kind {
         case .pdf:
             PDFPreview(url: file.url)
-        case .word:
+        case .word, .slides, .sheet:
             QuickLookPreview(url: file.url)
         case .text:
             ScrollView {

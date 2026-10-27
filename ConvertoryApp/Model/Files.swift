@@ -6,13 +6,15 @@ import UniformTypeIdentifiers
 // MARK: - Output library (the app's Documents folder, visible in the Files app)
 
 enum ResultKind {
-    case pdf, text, word
+    case pdf, text, word, slides, sheet
 
     init?(ext: String) {
         switch ext.lowercased() {
         case "pdf": self = .pdf
         case "txt": self = .text
         case "docx": self = .word
+        case "pptx": self = .slides
+        case "xlsx": self = .sheet
         default: return nil
         }
     }
@@ -22,6 +24,8 @@ enum ResultKind {
         case .pdf: return "doc.fill"
         case .text: return "text.alignleft"
         case .word: return "doc.richtext.fill"
+        case .slides: return "rectangle.on.rectangle.angled"
+        case .sheet: return "tablecells.fill"
         }
     }
 
@@ -30,6 +34,8 @@ enum ResultKind {
         case .pdf: return "PDF"
         case .text: return "Text"
         case .word: return "Word"
+        case .slides: return "PowerPoint"
+        case .sheet: return "Excel"
         }
     }
 }
@@ -146,6 +152,7 @@ struct InputItem: Identifiable {
     let isPDF: Bool
     let pageCount: Int
     let thumbnail: UIImage?
+    var isWord = false
 
     var name: String { url.lastPathComponent }
 
@@ -155,6 +162,7 @@ struct InputItem: Identifiable {
 
     var detail: String {
         let size = ByteCountFormatter.string(fromByteCount: fileSize, countStyle: .file)
+        if isWord { return "Word document · \(size)" }
         return isPDF ? "\(pageCount) page\(pageCount == 1 ? "" : "s") · \(size)" : "Picture · \(size)"
     }
 
@@ -165,6 +173,10 @@ struct InputItem: Identifiable {
             guard let doc = PDFDocument(url: url), !doc.isLocked, doc.pageCount > 0 else { return nil }
             let thumb = doc.page(at: 0)?.thumbnail(of: CGSize(width: 96, height: 128), for: .cropBox)
             return InputItem(url: url, isPDF: true, pageCount: doc.pageCount, thumbnail: thumb)
+        }
+        if url.pathExtension.lowercased() == "docx" {
+            guard let zip = ZipReader(url: url), zip.contains("word/document.xml") else { return nil }
+            return InputItem(url: url, isPDF: false, pageCount: 1, thumbnail: nil, isWord: true)
         }
         guard let image = ImageLoader.load(url, maxPixel: 220) else { return nil }
         return InputItem(url: url, isPDF: false, pageCount: 1, thumbnail: image)

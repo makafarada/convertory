@@ -90,7 +90,7 @@ enum DemoSeed {
             ]
         case .compress:
             return [makePhotoPDF(name: "Signed contract (scan)")]
-        case .scan, .imagesToPDF:
+        case .scan, .imagesToPDF, .wordToPDF:
             return []
         default:
             return [makePDF(title: "Quarterly report", lines: sampleLines, name: "Quarterly report")]

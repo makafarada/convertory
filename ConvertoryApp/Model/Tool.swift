@@ -3,10 +3,11 @@ import UniformTypeIdentifiers
 
 /// What kind of files a tool takes as input.
 enum InputKind {
-    case pdf, images, pdfOrImage
+    case pdf, images, pdfOrImage, word
 
     var contentTypes: [UTType] {
         switch self {
+        case .word: return [UTType("org.openxmlformats.wordprocessingml.document") ?? .data]
         case .pdf: return [.pdf]
         case .images: return [.image]
         case .pdfOrImage: return [.pdf, .image]
@@ -15,7 +16,7 @@ enum InputKind {
 }
 
 enum Tool: String, CaseIterable, Identifiable, Hashable {
-    case scan, imagesToPDF, merge, organize, watermark, compress, extractText, pdfToWord
+    case scan, imagesToPDF, merge, organize, watermark, compress, extractText, pdfToWord, wordToPDF, pdfToPowerPoint, pdfToExcel
 
     var id: String { rawValue }
 
@@ -29,6 +30,9 @@ enum Tool: String, CaseIterable, Identifiable, Hashable {
         case .compress: return "Compress"
         case .extractText: return "Extract text"
         case .pdfToWord: return "PDF to Word"
+        case .wordToPDF: return "Word to PDF"
+        case .pdfToPowerPoint: return "PDF to PowerPoint"
+        case .pdfToExcel: return "PDF to Excel"
         }
     }
 
@@ -42,6 +46,9 @@ enum Tool: String, CaseIterable, Identifiable, Hashable {
         case .compress: return "Make a large PDF small enough to send."
         case .extractText: return "Pull the text out of a PDF or a photo."
         case .pdfToWord: return "An editable .docx with headings and paragraphs."
+        case .wordToPDF: return "Turn a .docx into a PDF: text, headings and tables."
+        case .pdfToPowerPoint: return "Every page becomes a slide in a .pptx."
+        case .pdfToExcel: return "Find simple tables and save them as a .xlsx."
         }
     }
 
@@ -55,6 +62,9 @@ enum Tool: String, CaseIterable, Identifiable, Hashable {
         case .compress: return "arrow.down.right.and.arrow.up.left"
         case .extractText: return "text.viewfinder"
         case .pdfToWord: return "doc.richtext"
+        case .wordToPDF: return "doc.plaintext"
+        case .pdfToPowerPoint: return "rectangle.on.rectangle.angled"
+        case .pdfToExcel: return "tablecells"
         }
     }
 
@@ -68,6 +78,9 @@ enum Tool: String, CaseIterable, Identifiable, Hashable {
         case .compress: return Color(red: 0.12, green: 0.75, blue: 0.37)
         case .extractText: return Color(red: 1, green: 0.36, blue: 0.40)
         case .pdfToWord: return Color(red: 0.2, green: 0.6, blue: 1)
+        case .wordToPDF: return Color(red: 0.98, green: 0.45, blue: 0.27)
+        case .pdfToPowerPoint: return Color(red: 1, green: 0.62, blue: 0.15)
+        case .pdfToExcel: return Color(red: 0.15, green: 0.68, blue: 0.45)
         }
     }
 
@@ -75,7 +88,8 @@ enum Tool: String, CaseIterable, Identifiable, Hashable {
         switch self {
         case .scan, .imagesToPDF: return .images
         case .merge, .extractText: return .pdfOrImage
-        case .organize, .watermark, .compress, .pdfToWord: return .pdf
+        case .organize, .watermark, .compress, .pdfToWord, .pdfToPowerPoint, .pdfToExcel: return .pdf
+        case .wordToPDF: return .word
         }
     }
 
@@ -97,6 +111,9 @@ enum Tool: String, CaseIterable, Identifiable, Hashable {
         case .compress: return "Compress"
         case .extractText: return "Extract text"
         case .pdfToWord: return "Convert to Word"
+        case .wordToPDF: return "Convert to PDF"
+        case .pdfToPowerPoint: return "Convert to PowerPoint"
+        case .pdfToExcel: return "Convert to Excel"
         }
     }
 
@@ -105,16 +122,21 @@ enum Tool: String, CaseIterable, Identifiable, Hashable {
         case .pdf: return "Choose a PDF to begin."
         case .images: return "Add photos or pages to begin."
         case .pdfOrImage: return "Choose PDFs or pictures to begin."
+        case .word: return "Choose a Word document (.docx) to begin."
         }
     }
 
     /// Tools that make sense for a file opened from another app.
-    static func suggestions(forPDF isPDF: Bool) -> [Tool] {
-        allCases.filter { tool in
+    static func suggestions(forExtension fileExtension: String) -> [Tool] {
+        let lower = fileExtension.lowercased()
+        let isPDF = lower == "pdf"
+        let isWord = lower == "docx"
+        return allCases.filter { tool in
             switch tool.input {
             case .pdf: return isPDF
-            case .images: return !isPDF && tool != .scan
-            case .pdfOrImage: return true
+            case .word: return isWord
+            case .images: return !isPDF && !isWord && tool != .scan
+            case .pdfOrImage: return !isWord
             }
         }
     }

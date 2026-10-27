@@ -18,7 +18,7 @@ enum Engine {
         return format
     }
 
-    private static func openPDF(_ url: URL) throws -> PDFDocument {
+    static func openPDF(_ url: URL) throws -> PDFDocument {
         guard let doc = PDFDocument(url: url) else {
             throw EngineError.message("Couldn't open \(url.lastPathComponent).")
         }
