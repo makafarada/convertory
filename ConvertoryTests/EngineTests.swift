@@ -243,6 +243,9 @@ final class EngineTests: XCTestCase {
 
     func testPDFToExcelFindsColumns() throws {
         let src = try makeTablePDF()
+        let page = try XCTUnwrap(PDFDocument(url: src)?.page(at: 0))
+        let found = TableReader.words(on: page)
+        XCTAssertGreaterThanOrEqual(found.count, 10, "words: \(found.map { "\($0.text)@\(Int($0.box.minX)),\(Int($0.box.midY))" })")
         let out = try Engine.pdfToExcel(src)
         defer { try? FileManager.default.removeItem(at: out) }
         XCTAssertEqual(out.pathExtension, "xlsx")

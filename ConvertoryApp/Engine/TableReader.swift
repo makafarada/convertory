@@ -49,7 +49,7 @@ enum TableReader {
                 flush()
                 continue
             }
-            let rect = page.characterBounds(at: range.location)
+            let rect = characterRect(on: page, range: range)
             if rect.height <= 0 || rect.width < 0 || rect.isNull || rect.isInfinite {
                 continue
             }
@@ -66,6 +66,18 @@ enum TableReader {
         }
         flush()
         return result
+    }
+
+    /// Bounds of one character. PDFKit's characterBounds can come back empty for some files,
+    /// so fall back to the bounds of a selection over the same character.
+    private static func characterRect(on page: PDFPage, range: NSRange) -> CGRect {
+        let direct = page.characterBounds(at: range.location)
+        if direct.height > 0, direct.width >= 0, !direct.isNull, !direct.isInfinite { return direct }
+        if let selection = page.selection(for: range) {
+            let rect = selection.bounds(for: page)
+            if rect.height > 0, !rect.isNull, !rect.isInfinite { return rect }
+        }
+        return direct
     }
 
     /// Words for a scanned page, read with on-device text recognition.
