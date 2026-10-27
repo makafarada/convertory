@@ -103,7 +103,7 @@ enum WordDocument {
                 var queue: [NSAttributedString] = [attributed(block)]
                 while !queue.isEmpty {
                     let piece = queue.removeFirst()
-                    let measured = piece.boundingRect(with: CGSize(width: width, height: .greatestFiniteHeight),
+                    let measured = piece.boundingRect(with: CGSize(width: width, height: CGFloat.greatestFiniteMagnitude),
                                                       options: drawOptions, context: nil)
                     let height = ceil(measured.height)
 
