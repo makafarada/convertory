@@ -34,7 +34,7 @@ final class ScreenshotTests: XCTestCase {
         add(attachment)
     }
 
-    private func runTool(_ tool: String, button: String, name: String) {
+    private func runTool(_ tool: String, button: String, name: String, settle: TimeInterval = 0) {
         let app = launch(tool: tool)
         let action = app.buttons[button]
         _ = action.waitForExistence(timeout: 15)
@@ -43,6 +43,7 @@ final class ScreenshotTests: XCTestCase {
             action.tap()
             let saved = app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'Saved in Files'")).firstMatch
             _ = saved.waitForExistence(timeout: 40)
+            Thread.sleep(forTimeInterval: settle)  // Quick Look needs a moment to draw Office files
             shot("\(name)-2-result")
         }
         app.terminate()
@@ -61,13 +62,13 @@ final class ScreenshotTests: XCTestCase {
 
     func test03Compress() { runTool("compress", button: "Compress", name: "03-compress") }
 
-    func test04Word() { runTool("pdfToWord", button: "Convert to Word", name: "04-word") }
+    func test04Word() { runTool("pdfToWord", button: "Convert to Word", name: "04-word", settle: 10) }
 
     func test09WordToPDF() { runTool("wordToPDF", button: "Convert to PDF", name: "09-word-to-pdf") }
 
-    func test10PowerPoint() { runTool("pdfToPowerPoint", button: "Convert to PowerPoint", name: "10-powerpoint") }
+    func test10PowerPoint() { runTool("pdfToPowerPoint", button: "Convert to PowerPoint", name: "10-powerpoint", settle: 10) }
 
-    func test11Excel() { runTool("pdfToExcel", button: "Convert to Excel", name: "11-excel") }
+    func test11Excel() { runTool("pdfToExcel", button: "Convert to Excel", name: "11-excel", settle: 10) }
 
     func test05Text() { runTool("extractText", button: "Extract text", name: "05-text") }
 
