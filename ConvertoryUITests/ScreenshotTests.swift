@@ -14,8 +14,20 @@ final class ScreenshotTests: XCTestCase {
         return app
     }
 
+    /// Swipes away system banners, such as the first-boot "Ready for Apple Intelligence" notice.
+    private func dismissBanners() {
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        for _ in 0..<3 {
+            let banner = springboard.otherElements["NotificationShortLookView"].firstMatch
+            guard banner.waitForExistence(timeout: 1) else { return }
+            banner.swipeUp()
+            Thread.sleep(forTimeInterval: 0.6)
+        }
+    }
+
     private func shot(_ name: String) {
         Thread.sleep(forTimeInterval: 1.5)
+        dismissBanners()
         let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         attachment.name = name
         attachment.lifetime = .keepAlways
@@ -50,6 +62,12 @@ final class ScreenshotTests: XCTestCase {
     func test03Compress() { runTool("compress", button: "Compress", name: "03-compress") }
 
     func test04Word() { runTool("pdfToWord", button: "Convert to Word", name: "04-word") }
+
+    func test09WordToPDF() { runTool("wordToPDF", button: "Convert to PDF", name: "09-word-to-pdf") }
+
+    func test10PowerPoint() { runTool("pdfToPowerPoint", button: "Convert to PowerPoint", name: "10-powerpoint") }
+
+    func test11Excel() { runTool("pdfToExcel", button: "Convert to Excel", name: "11-excel") }
 
     func test05Text() { runTool("extractText", button: "Extract text", name: "05-text") }
 

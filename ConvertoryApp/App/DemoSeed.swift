@@ -81,6 +81,46 @@ enum DemoSeed {
         return target
     }
 
+    /// A small .docx made by the PDF to Word converter, staged as if it came from Files.
+    private static func makeWordDocument(name: String) -> URL {
+        let source = makePDF(title: "Quarterly report", lines: sampleLines, name: "\(name) source")
+        guard let docx = try? Engine.pdfToWord(source),
+              let data = try? Data(contentsOf: docx),
+              let staged = try? Inbox.stage(data: data, name: "\(name).docx") else { return source }
+        try? FileManager.default.removeItem(at: docx)
+        return staged
+    }
+
+    /// A one-page PDF with a simple table, for PDF to Excel.
+    private static func makeTablePDF(name: String) -> URL {
+        let url = Inbox.folder.appendingPathComponent("\(name).pdf")
+        let rows: [[String]] = [
+            ["Region", "Orders", "Revenue"],
+            ["North", "128", "14,250.00"],
+            ["South", "96", "10,980.50"],
+            ["East", "142", "16,720.00"],
+            ["West", "87", "9,415.75"],
+            ["Online", "301", "33,860.25"]
+        ]
+        let columns: [CGFloat] = [64, 280, 400]
+        let data = UIGraphicsPDFRenderer(bounds: CGRect(x: 0, y: 0, width: 595, height: 842)).pdfData { context in
+            context.beginPage()
+            ("Regional sales" as NSString).draw(at: CGPoint(x: 64, y: 64), withAttributes: [
+                .font: UIFont.systemFont(ofSize: 26, weight: .bold)
+            ])
+            for (r, row) in rows.enumerated() {
+                for (c, cell) in row.enumerated() {
+                    (cell as NSString).draw(at: CGPoint(x: columns[c], y: 140 + CGFloat(r) * 38), withAttributes: [
+                        .font: UIFont.systemFont(ofSize: 17, weight: r == 0 ? .semibold : .regular),
+                        .foregroundColor: UIColor.darkGray
+                    ])
+                }
+            }
+        }
+        try? data.write(to: url)
+        return url
+    }
+
     static func inputs(for tool: Tool) -> [URL] {
         switch tool {
         case .merge:
@@ -90,7 +130,11 @@ enum DemoSeed {
             ]
         case .compress:
             return [makePhotoPDF(name: "Signed contract (scan)")]
-        case .scan, .imagesToPDF, .wordToPDF:
+        case .wordToPDF:
+            return [makeWordDocument(name: "Quarterly report")]
+        case .pdfToExcel:
+            return [makeTablePDF(name: "Regional sales")]
+        case .scan, .imagesToPDF:
             return []
         default:
             return [makePDF(title: "Quarterly report", lines: sampleLines, name: "Quarterly report")]
