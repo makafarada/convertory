@@ -95,7 +95,7 @@ jobs:
             CODE_SIGN_STYLE=Manual \
             PROVISIONING_PROFILE_SPECIFIER="" \
             DEVELOPMENT_TEAM=CH4N7A9L79 \
-            CURRENT_PROJECT_VERSION=${{ github.run_number }}
+            CURRENT_PROJECT_VERSION=$((${{ github.run_number }} + 100))
 
       - name: Export IPA
         env:
